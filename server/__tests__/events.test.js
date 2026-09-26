@@ -60,6 +60,22 @@ describe('events API', () => {
     expect(updateRes.body.title).toBe('Brunch');
   });
 
+  it('rejects an update that blanks the title, but keeps it when omitted', async () => {
+    const db = setupTestDb();
+    const app = createApp(db);
+    const agent = await loginAgent(app);
+    const createRes = await agent.post('/api/events').send({ title: 'Dinner', date: '2026-10-01' });
+    const id = createRes.body.id;
+
+    const blankRes = await agent.put(`/api/events/${id}`).send({ title: '   ' });
+    expect(blankRes.status).toBe(400);
+
+    const omittedRes = await agent.put(`/api/events/${id}`).send({ description: 'Table for two' });
+    expect(omittedRes.status).toBe(200);
+    expect(omittedRes.body.title).toBe('Dinner');
+    expect(omittedRes.body.description).toBe('Table for two');
+  });
+
   it('returns 404 when updating a nonexistent event', async () => {
     const db = setupTestDb();
     const app = createApp(db);

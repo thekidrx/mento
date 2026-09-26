@@ -58,4 +58,18 @@ describe('auth', () => {
     expect(res.status).toBe(200);
     expect(res.body.displayName).toBe('Ryan');
   });
+
+  it('invalidates the session on logout', async () => {
+    const db = setupTestDb();
+    const app = createApp(db);
+    const agent = request.agent(app);
+    await agent.post('/api/auth/login').send({ username: 'ryan', password: 'testpass' });
+    expect((await agent.get('/api/auth/me')).status).toBe(200);
+
+    const logout = await agent.post('/api/auth/logout');
+    expect(logout.status).toBe(200);
+
+    const res = await agent.get('/api/auth/me');
+    expect(res.status).toBe(401);
+  });
 });

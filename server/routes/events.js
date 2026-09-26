@@ -26,6 +26,14 @@ function createEventsRouter(db) {
       return res.status(404).json({ error: 'Event not found' });
     }
     const { title, description, date } = req.body;
+    // `undefined`/`null` means "keep the existing value"; an explicitly supplied
+    // blank title is invalid, same as on POST.
+    if (title !== undefined && title !== null && !String(title).trim()) {
+      return res.status(400).json({ error: 'Title cannot be empty' });
+    }
+    if (date !== undefined && date !== null && !String(date).trim()) {
+      return res.status(400).json({ error: 'Date cannot be empty' });
+    }
     db.prepare('UPDATE events SET title = ?, description = ?, date = ? WHERE id = ?').run(
       title ?? existing.title,
       description ?? existing.description,

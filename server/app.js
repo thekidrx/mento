@@ -3,6 +3,7 @@ const session = require('express-session');
 const path = require('path');
 const { createAuthRouter, requireAuth } = require('./auth');
 const { createEventsRouter } = require('./routes/events');
+const { createNotesRouter } = require('./routes/notes');
 
 function createApp(db, options = {}) {
   const app = express();
@@ -18,6 +19,7 @@ function createApp(db, options = {}) {
 
   app.use('/api/auth', createAuthRouter(db));
   app.use('/api/events', requireAuth, createEventsRouter(db));
+  app.use('/api/notes', requireAuth, createNotesRouter(db));
 
   if (options.staticDir) {
     app.use(express.static(options.staticDir));

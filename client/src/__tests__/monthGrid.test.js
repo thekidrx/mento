@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { getMonthGridDays, toDateKey } from '../components/monthGrid';
+import { getMonthGridDays, toDateKey } from '../components/monthGridLogic';
 
 describe('getMonthGridDays', () => {
   it('pads the grid to a multiple of 7', () => {

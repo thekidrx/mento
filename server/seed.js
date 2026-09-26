@@ -19,7 +19,12 @@ function seedUsers(db) {
   );
 
   for (const u of users) {
-    if (!u.username || !u.password) continue;
+    if (!u.username || !u.password) {
+      console.warn(
+        `Skipping user seed: missing username or password for ${u.username || '(unknown)'}`
+      );
+      continue;
+    }
     const hash = bcrypt.hashSync(u.password, 10);
     insert.run(u.username, hash, u.displayName);
   }

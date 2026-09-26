@@ -11,6 +11,10 @@
   sudo apt-get install -y docker-compose-plugin
   ```
   Log out and back in for the group change to take effect.
+- The `sqlite3` CLI installed on the Pi (used by `scripts/backup.sh`):
+  ```bash
+  sudo apt-get install -y sqlite3
+  ```
 
 ## 1. Get the code onto the Pi
 
@@ -21,14 +25,37 @@ cd rs-web
 
 ## 2. Create the Cloudflare Tunnel
 
-On any machine with `cloudflared` installed (or via the Cloudflare dashboard):
+This project runs `cloudflared` in Docker using a **tunnel token** (see the
+`cloudflared` service in `docker-compose.yml`, which reads `TUNNEL_TOKEN`).
+That means the tunnel is managed entirely from the Cloudflare dashboard —
+there is no local `config.yml` and no `cloudflared` CLI work to do.
 
-1. Log into Cloudflare: `cloudflared tunnel login`
-2. Create the tunnel: `cloudflared tunnel create rs-web`
-3. Route your subdomain to it: `cloudflared tunnel route dns rs-web us.yourdomain.com`
-4. In the Cloudflare Zero Trust dashboard, under Access > Tunnels, find the
-   tunnel and copy its **token** (this is what `cloudflared` running in
-   Docker will use to authenticate — no local config file needed).
+1. Open the **Cloudflare Zero Trust dashboard** → **Networks** → **Tunnels**
+   and click **Create a tunnel**. Choose the **Cloudflared** connector type
+   and give it a name (e.g. `rs-web`).
+2. On the "Install and run a connector" screen, copy the **tunnel token**.
+   It's the long string in the install command (the value after
+   `--token`). This is what goes into `.env` as `TUNNEL_TOKEN` in step 3.
+   You don't need to run the install command that the dashboard shows —
+   Docker Compose runs the connector for you.
+3. Continue to the tunnel's **Public Hostname** tab and add a public
+   hostname so the tunnel knows where to send incoming traffic:
+   - **Subdomain**: `us` (or whatever you chose)
+   - **Domain**: `yourdomain.com`
+   - **Type**: `HTTP`
+   - **URL**: `app:3000`
+
+   `app` here is the **Docker Compose service name** of the main app
+   container (see `docker-compose.yml`), *not* `localhost` and not the Pi's
+   IP. `cloudflared` runs in its own container on the same Compose network,
+   so it reaches the app container by that service name. Using `localhost`
+   would point `cloudflared` at itself and produce a 502.
+
+   Saving the public hostname also creates the required DNS record for
+   `us.yourdomain.com` automatically.
+
+Without this public hostname mapping the tunnel will connect successfully
+but serve nothing — this step is what actually routes traffic to the app.
 
 ## 3. Configure environment variables
 
@@ -82,4 +109,5 @@ docker compose up -d --build
 ```
 
 The SQLite file in `./data` is untouched by rebuilds since it's a mounted
-volume, not part of the image.
+volume, not part of the image. Login sessions are stored in that same file,
+so a rebuild doesn't log anyone out.

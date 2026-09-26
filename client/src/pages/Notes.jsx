@@ -33,8 +33,13 @@ export function NotesPage({ currentUserId }) {
   }
 
   async function handleDelete(id) {
-    await api.deleteNote(id);
-    loadNotes();
+    setError('');
+    try {
+      await api.deleteNote(id);
+      loadNotes();
+    } catch (err) {
+      setError(err.message);
+    }
   }
 
   return (
@@ -52,7 +57,8 @@ export function NotesPage({ currentUserId }) {
       <ul className="notes-list">
         {notes.map((note) => (
           <li key={note.id}>
-            <strong>{note.display_name}</strong>: {note.message}
+            <strong>{note.display_name}</strong>{' '}
+            <span className="note-timestamp">{note.created_at} UTC</span>: {note.message}
             {canDeleteNote(note, currentUserId) && (
               <button onClick={() => handleDelete(note.id)}>Delete</button>
             )}

@@ -20,9 +20,17 @@ export function Login({ onLogin }) {
   return (
     <form className="login-form" onSubmit={handleSubmit}>
       <h1>R&amp;S</h1>
-      <input value={username} onChange={(e) => setUsername(e.target.value)} placeholder="Username" />
+      <input
+        name="username"
+        autoComplete="username"
+        value={username}
+        onChange={(e) => setUsername(e.target.value)}
+        placeholder="Username"
+      />
       <input
         type="password"
+        name="password"
+        autoComplete="current-password"
         value={password}
         onChange={(e) => setPassword(e.target.value)}
         placeholder="Password"

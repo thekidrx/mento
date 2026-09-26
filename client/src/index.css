@@ -5,8 +5,14 @@ body {
   color: #2a2a2a;
 }
 
-.login-form, .app {
+.login-form {
   max-width: 480px;
+  margin: 40px auto;
+  padding: 24px;
+}
+
+.app {
+  max-width: 900px;
   margin: 40px auto;
   padding: 24px;
 }
@@ -27,4 +33,128 @@ header {
   display: flex;
   justify-content: space-between;
   align-items: center;
+}
+
+/* Calendar */
+
+.calendar-controls {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+  margin: 16px 0;
+  font-weight: 600;
+}
+
+.calendar-controls button {
+  padding: 4px 12px;
+  cursor: pointer;
+}
+
+.month-grid {
+  border: 1px solid #e3cdd6;
+  border-radius: 6px;
+  overflow: hidden;
+  background: #fff;
+}
+
+.month-grid-header,
+.month-grid-body {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+}
+
+.month-grid-weekday {
+  padding: 6px 4px;
+  text-align: center;
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: #6b5560;
+  background: #f6e8ee;
+  border-bottom: 1px solid #e3cdd6;
+}
+
+.month-grid-cell {
+  min-height: 84px;
+  padding: 4px;
+  border-right: 1px solid #f0e0e7;
+  border-bottom: 1px solid #f0e0e7;
+  cursor: pointer;
+  overflow: hidden;
+}
+
+.month-grid-cell:nth-child(7n) {
+  border-right: none;
+}
+
+.month-grid-cell:hover {
+  background: #fdf1f5;
+}
+
+.month-grid-cell.empty {
+  background: #faf5f7;
+  cursor: default;
+}
+
+.month-grid-cell.empty:hover {
+  background: #faf5f7;
+}
+
+.month-grid-date {
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: #6b5560;
+  margin-bottom: 2px;
+}
+
+.month-grid-event {
+  font-size: 0.72rem;
+  line-height: 1.3;
+  padding: 1px 4px;
+  margin-bottom: 2px;
+  border-radius: 3px;
+  background: #e8d3dd;
+  color: #3a2a32;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* Lists */
+
+.event-list, .notes-list {
+  list-style: none;
+  padding: 0;
+  margin: 16px 0 0;
+}
+
+.event-list li, .notes-list li {
+  padding: 8px 10px;
+  margin-bottom: 8px;
+  background: #fff;
+  border: 1px solid #f0e0e7;
+  border-radius: 4px;
+  line-height: 1.5;
+}
+
+.event-list li button, .notes-list li button {
+  margin-left: 8px;
+  cursor: pointer;
+}
+
+.note-timestamp {
+  color: #8a7580;
+  font-size: 0.75rem;
+}
+
+@media (max-width: 600px) {
+  .month-grid-cell {
+    min-height: 56px;
+  }
+
+  .month-grid-event {
+    font-size: 0.65rem;
+  }
 }

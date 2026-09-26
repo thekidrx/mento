@@ -10,6 +10,7 @@ export function CalendarPage() {
   const [selectedDate, setSelectedDate] = useState(null);
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
+  const [editingEventId, setEditingEventId] = useState(null);
   const [error, setError] = useState('');
 
   useEffect(() => {
@@ -34,14 +35,38 @@ export function CalendarPage() {
     setYear(newYear);
   }
 
-  async function handleAddEvent(e) {
+  function resetForm() {
+    setTitle('');
+    setDescription('');
+    setEditingEventId(null);
+  }
+
+  function handleDayClick(date) {
+    // Selecting a different day always means "add here", never "move the
+    // event I was editing", so drop any in-progress edit.
+    resetForm();
+    setError('');
+    setSelectedDate(date);
+  }
+
+  function startEditing(event) {
+    setSelectedDate(event.date);
+    setEditingEventId(event.id);
+    setTitle(event.title);
+    setDescription(event.description || '');
+    setError('');
+  }
+
+  async function handleSubmitEvent(e) {
     e.preventDefault();
     setError('');
     try {
-      await api.createEvent({ title, description, date: selectedDate });
-      setTitle('');
-      setDescription('');
-      setSelectedDate(null);
+      if (editingEventId !== null) {
+        await api.updateEvent(editingEventId, { title, description, date: selectedDate });
+      } else {
+        await api.createEvent({ title, description, date: selectedDate });
+      }
+      resetForm();
       loadEvents();
     } catch (err) {
       setError(err.message);
@@ -49,9 +74,17 @@ export function CalendarPage() {
   }
 
   async function handleDeleteEvent(id) {
-    await api.deleteEvent(id);
-    loadEvents();
+    setError('');
+    try {
+      await api.deleteEvent(id);
+      if (editingEventId === id) resetForm();
+      loadEvents();
+    } catch (err) {
+      setError(err.message);
+    }
   }
+
+  const isEditing = editingEventId !== null;
 
   return (
     <div className="calendar-page">
@@ -60,10 +93,10 @@ export function CalendarPage() {
         <span>{year}-{String(month + 1).padStart(2, '0')}</span>
         <button onClick={() => changeMonth(1)}>&gt;</button>
       </div>
-      <MonthGrid year={year} month={month} events={events} onDayClick={setSelectedDate} />
+      <MonthGrid year={year} month={month} events={events} onDayClick={handleDayClick} />
       {selectedDate && (
-        <form className="event-form" onSubmit={handleAddEvent}>
-          <h2>Add event on {selectedDate}</h2>
+        <form className="event-form" onSubmit={handleSubmitEvent}>
+          <h2>{isEditing ? 'Edit event' : 'Add event'} on {selectedDate}</h2>
           <input value={title} onChange={(e) => setTitle(e.target.value)} placeholder="Title" required />
           <input
             value={description}
@@ -71,8 +104,12 @@ export function CalendarPage() {
             placeholder="Description"
           />
           {error && <p className="error">{error}</p>}
-          <button type="submit">Add</button>
-          <button type="button" onClick={() => setSelectedDate(null)}>Cancel</button>
+          <button type="submit">{isEditing ? 'Save' : 'Add'}</button>
+          {isEditing ? (
+            <button type="button" onClick={resetForm}>Cancel edit</button>
+          ) : (
+            <button type="button" onClick={() => { resetForm(); setSelectedDate(null); }}>Cancel</button>
+          )}
         </form>
       )}
       <ul className="event-list">
@@ -81,6 +118,7 @@ export function CalendarPage() {
           .map((event) => (
             <li key={event.id}>
               {event.title}
+              <button onClick={() => startEditing(event)}>Edit</button>
               <button onClick={() => handleDeleteEvent(event.id)}>Delete</button>
             </li>
           ))}

@@ -1,7 +1,8 @@
 const express = require('express');
 const session = require('express-session');
 const path = require('path');
-const { createAuthRouter } = require('./auth');
+const { createAuthRouter, requireAuth } = require('./auth');
+const { createEventsRouter } = require('./routes/events');
 
 function createApp(db, options = {}) {
   const app = express();
@@ -16,6 +17,7 @@ function createApp(db, options = {}) {
   app.get('/api/health', (req, res) => res.json({ ok: true }));
 
   app.use('/api/auth', createAuthRouter(db));
+  app.use('/api/events', requireAuth, createEventsRouter(db));
 
   if (options.staticDir) {
     app.use(express.static(options.staticDir));

@@ -1,0 +1,23 @@
+services:
+  app:
+    build: .
+    restart: unless-stopped
+    environment:
+      - PORT=3000
+      - SESSION_SECRET=${SESSION_SECRET}
+      - USER1_USERNAME=${USER1_USERNAME}
+      - USER1_PASSWORD=${USER1_PASSWORD}
+      - USER1_DISPLAY_NAME=${USER1_DISPLAY_NAME}
+      - USER2_USERNAME=${USER2_USERNAME}
+      - USER2_PASSWORD=${USER2_PASSWORD}
+      - USER2_DISPLAY_NAME=${USER2_DISPLAY_NAME}
+      - DB_PATH=/data/app.db
+    volumes:
+      - ./data:/data
+
+  cloudflared:
+    image: cloudflare/cloudflared:latest
+    restart: unless-stopped
+    command: tunnel run
+    environment:
+      - TUNNEL_TOKEN=${TUNNEL_TOKEN}

@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Login } from './pages/Login';
 import { CalendarPage } from './pages/Calendar';
+import { NotesPage } from './pages/Notes';
 import { api, setUnauthorizedHandler } from './api';
 
 export function App() {
@@ -31,7 +32,7 @@ export function App() {
         </nav>
         <button onClick={handleLogout}>Log out</button>
       </header>
-      {tab === 'calendar' ? <CalendarPage /> : <p>Notes coming up next.</p>}
+      {tab === 'calendar' ? <CalendarPage /> : <NotesPage currentUserId={user.id} />}
     </div>
   );
 }

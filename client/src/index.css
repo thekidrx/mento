@@ -1,0 +1,30 @@
+body {
+  font-family: system-ui, sans-serif;
+  margin: 0;
+  background: #fdf6f8;
+  color: #2a2a2a;
+}
+
+.login-form, .app {
+  max-width: 480px;
+  margin: 40px auto;
+  padding: 24px;
+}
+
+.login-form input, .event-form input, .event-form textarea, .notes-page textarea {
+  display: block;
+  width: 100%;
+  margin-bottom: 12px;
+  padding: 8px;
+  box-sizing: border-box;
+}
+
+.error {
+  color: #b00020;
+}
+
+header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}

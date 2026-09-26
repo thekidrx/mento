@@ -1,0 +1,19 @@
+{
+  "name": "rs-web-client",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1"
+  },
+  "devDependencies": {
+    "vite": "^5.4.6",
+    "@vitejs/plugin-react": "^4.3.1",
+    "vitest": "^2.1.1"
+  }
+}

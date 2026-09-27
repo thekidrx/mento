@@ -2,7 +2,7 @@
 .superpowers/
 
 node_modules/
-data/
+/data/
 .env
 client/dist/
 backups/

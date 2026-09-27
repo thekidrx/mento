@@ -10,7 +10,13 @@ RUN npm run build
 FROM node:22-bookworm-slim AS server
 WORKDIR /app/server
 COPY server/package*.json ./
-RUN npm ci --omit=dev
+# python3/make/g++: better-sqlite3 has no prebuilt binary for every
+# arch/Node combo (e.g. Raspberry Pi's arm64), so it falls back to
+# compiling from source via node-gyp, which needs these.
+RUN apt-get update \
+  && apt-get install -y --no-install-recommends python3 make g++ \
+  && rm -rf /var/lib/apt/lists/* \
+  && npm ci --omit=dev
 COPY server/ ./
 COPY --from=client-build /app/client/dist /app/client/dist
 

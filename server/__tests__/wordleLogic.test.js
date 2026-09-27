@@ -1,4 +1,11 @@
 const { computeFeedback } = require('../wordleLogic');
+const {
+  loadAnswerWords,
+  loadValidGuessSet,
+  pickDailyWord,
+  computeGuessCount,
+  computeScoreTally,
+} = require('../wordleLogic');
 
 describe('computeFeedback', () => {
   it('marks every letter green on an exact match', () => {
@@ -13,5 +20,66 @@ describe('computeFeedback', () => {
   it('only marks a repeated guess letter yellow once when the answer has fewer copies', () => {
     // answer MODEL has one L; guess ALLOT has two L's, so only the first should be yellow.
     expect(computeFeedback('ALLOT', 'MODEL')).toBe('BYBYB');
+  });
+});
+
+describe('loadAnswerWords', () => {
+  it('loads a non-empty list of uppercase 5-letter words including a known common word', () => {
+    const words = loadAnswerWords();
+    expect(words.length).toBeGreaterThan(100);
+    expect(words).toContain('ABOUT');
+    expect(words.every((w) => /^[A-Z]{5}$/.test(w))).toBe(true);
+  });
+});
+
+describe('loadValidGuessSet', () => {
+  it('includes both answer words and the broader guess list', () => {
+    const set = loadValidGuessSet();
+    expect(set.has('ABOUT')).toBe(true);
+    expect(set.has('AAHED')).toBe(true);
+    expect(set.has('ZZZZZ')).toBe(false);
+  });
+});
+
+describe('pickDailyWord', () => {
+  it('excludes already-used words when an unused one remains', () => {
+    const answers = ['ALPHA', 'BRAVO', 'CHARL'];
+    const used = ['ALPHA', 'BRAVO'];
+    expect(pickDailyWord(answers, used)).toBe('CHARL');
+  });
+
+  it('falls back to the full list once every word has been used', () => {
+    const answers = ['ALPHA', 'BRAVO'];
+    const used = ['ALPHA', 'BRAVO'];
+    expect(answers).toContain(pickDailyWord(answers, used));
+  });
+});
+
+describe('computeGuessCount', () => {
+  it('returns null while still in progress', () => {
+    expect(computeGuessCount([{ feedback: 'BBBBB' }, { feedback: 'YBBBB' }])).toBeNull();
+  });
+
+  it('returns the 1-based guess number on a solve', () => {
+    expect(
+      computeGuessCount([{ feedback: 'BBBBB' }, { feedback: 'GGGGG' }, { feedback: 'GGGGG' }])
+    ).toBe(2);
+  });
+
+  it('returns Infinity after 6 guesses with no solve', () => {
+    const guesses = new Array(6).fill({ feedback: 'BBBBB' });
+    expect(computeGuessCount(guesses)).toBe(Infinity);
+  });
+});
+
+describe('computeScoreTally', () => {
+  it('awards a point to whoever had fewer guesses each day, and nothing on a tie', () => {
+    const days = [
+      { counts: { 1: 2, 2: 4 } },   // user 1 wins
+      { counts: { 1: 5, 2: 5 } },   // tie, no point
+      { counts: { 1: Infinity, 2: 3 } }, // user 2 wins (user 1 failed)
+      { counts: { 1: Infinity, 2: Infinity } }, // both failed, tie, no point
+    ];
+    expect(computeScoreTally(days, 1, 2)).toEqual({ 1: 1, 2: 1 });
   });
 });

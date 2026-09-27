@@ -20,3 +20,19 @@ CREATE TABLE IF NOT EXISTS notes (
   created_by INTEGER NOT NULL REFERENCES users(id),
   created_at TEXT NOT NULL DEFAULT (datetime('now'))
 );
+
+CREATE TABLE IF NOT EXISTS wordle_days (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  date TEXT UNIQUE NOT NULL,
+  word TEXT NOT NULL
+);
+
+CREATE TABLE IF NOT EXISTS wordle_guesses (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  day_id INTEGER NOT NULL REFERENCES wordle_days(id),
+  user_id INTEGER NOT NULL REFERENCES users(id),
+  guess TEXT NOT NULL,
+  feedback TEXT NOT NULL,
+  created_at TEXT NOT NULL DEFAULT (datetime('now')),
+  UNIQUE(day_id, user_id, guess)
+);

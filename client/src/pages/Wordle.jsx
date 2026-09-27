@@ -18,6 +18,7 @@ export function WordlePage({ currentUserId }) {
   const [users, setUsers] = useState([]);
   const [input, setInput] = useState('');
   const [error, setError] = useState('');
+  const [submitting, setSubmitting] = useState(false);
 
   useEffect(() => {
     loadToday();
@@ -49,6 +50,7 @@ export function WordlePage({ currentUserId }) {
       setError('Guess must be 5 letters');
       return;
     }
+    setSubmitting(true);
     try {
       await api.submitWordleGuess(guess);
       setInput('');
@@ -56,12 +58,15 @@ export function WordlePage({ currentUserId }) {
       await loadScore();
     } catch (err) {
       setError(err.message);
+    } finally {
+      setSubmitting(false);
     }
   }
 
   function handleKey(key) {
     if (solved || failed) return;
     if (key === 'ENTER') {
+      if (submitting) return;
       submitGuess(input);
     } else if (key === 'BACKSPACE') {
       setInput((prev) => prev.slice(0, -1));
@@ -72,8 +77,10 @@ export function WordlePage({ currentUserId }) {
 
   useEffect(() => {
     function onKeyDown(e) {
+      if (e.ctrlKey || e.metaKey || e.altKey) return;
       const key = e.key.toUpperCase();
       if (key === 'ENTER' || key === 'BACKSPACE' || /^[A-Z]$/.test(key)) {
+        e.preventDefault();
         handleKey(key);
       }
     }
@@ -127,7 +134,8 @@ export function WordlePage({ currentUserId }) {
           {todayResult.winner === 'you' && 'You won today!'}
           {todayResult.winner === 'opponent' &&
             `${opponent ? opponent.display_name : 'Your partner'} won today.`}
-          {' '}({todayResult.yourGuesses} vs {todayResult.opponentGuesses} guesses)
+          {' '}({todayResult.yourGuesses} vs {todayResult.opponentGuesses} guesses). The word was{' '}
+          {todayResult.answer}.
         </p>
       )}
       <div className="wordle-keyboard">

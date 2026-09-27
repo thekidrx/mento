@@ -164,10 +164,48 @@ describe('wordle API', () => {
     }
 
     const ryanView = await ryanAgent.get('/api/wordle/today');
-    expect(ryanView.body.todayResult).toEqual({ yourGuesses: 1, opponentGuesses: 6, winner: 'you' });
+    expect(ryanView.body.todayResult).toEqual({
+      yourGuesses: 1,
+      opponentGuesses: 6,
+      winner: 'you',
+      answer: word,
+    });
 
     const samView = await samAgent.get('/api/wordle/today');
-    expect(samView.body.todayResult).toEqual({ yourGuesses: 6, opponentGuesses: 1, winner: 'opponent' });
+    expect(samView.body.todayResult).toEqual({
+      yourGuesses: 6,
+      opponentGuesses: 1,
+      winner: 'opponent',
+      answer: word,
+    });
+  });
+
+  it("still hides opponent's guesses but reports opponentFinished once they complete, while caller is still mid-game", async () => {
+    const db = setupTestDb();
+    const app = createApp(db);
+    const ryanAgent = await loginAgent(app, 'ryan');
+    const samAgent = await loginAgent(app, 'sam');
+    await ryanAgent.get('/api/wordle/today');
+    const word = todaysWord(db);
+    const wrongGuesses = ['ABOUT', 'CRANE', 'TRAIN', 'PLANE', 'STONE', 'GRAPE', 'HOUSE'].filter(
+      (w) => w !== word
+    );
+
+    // Ryan makes one wrong guess and stops (still mid-game).
+    await ryanAgent.post('/api/wordle/guess').send({ guess: wrongGuesses[0] });
+
+    // Sam makes 2 wrong guesses, then plays out the rest and fails after 6.
+    for (const guess of wrongGuesses.slice(0, 6)) {
+      await samAgent.post('/api/wordle/guess').send({ guess });
+    }
+
+    const ryanView = await ryanAgent.get('/api/wordle/today');
+    expect(ryanView.body.opponentFinished).toBe(true);
+    expect(ryanView.body.solved).toBe(false);
+    expect(ryanView.body.failed).toBe(false);
+    expect(ryanView.body.guesses).toHaveLength(1);
+    expect(ryanView.body.guesses[0].guess).toBe(wrongGuesses[0]);
+    expect(ryanView.body.todayResult).toBeUndefined();
   });
 
   it('returns a zero tally when no history exists', async () => {

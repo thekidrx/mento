@@ -65,6 +65,7 @@ function createWordleRouter(db) {
         yourGuesses: guesses.length,
         opponentGuesses: opponentGuesses.length,
         winner: yourCount < opponentCount ? 'you' : yourCount > opponentCount ? 'opponent' : 'tie',
+        answer: day.word,
       };
     }
 

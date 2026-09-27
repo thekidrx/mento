@@ -145,11 +145,13 @@ Expected: both files non-empty (roughly 1,000 and 8,500 lines respectively), one
 
 - [ ] **Step 2: Write the failing tests**
 
-Append to `server/__tests__/wordleLogic.test.js`:
+Append to `server/__tests__/wordleLogic.test.js`. Note: `computeFeedback` is
+already imported at the top of this file from Task 1 — do not re-import it,
+or Node will throw `SyntaxError: Identifier 'computeFeedback' has already
+been declared`. Only import the new functions:
 
 ```js
 const {
-  computeFeedback,
   loadAnswerWords,
   loadValidGuessSet,
   pickDailyWord,

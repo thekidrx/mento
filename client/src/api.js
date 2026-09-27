@@ -34,4 +34,9 @@ export const api = {
   getNotes: () => request('/notes'),
   createNote: (message) => request('/notes', { method: 'POST', body: JSON.stringify({ message }) }),
   deleteNote: (id) => request(`/notes/${id}`, { method: 'DELETE' }),
+  getUsers: () => request('/users'),
+  getWordleToday: () => request('/wordle/today'),
+  submitWordleGuess: (guess) =>
+    request('/wordle/guess', { method: 'POST', body: JSON.stringify({ guess }) }),
+  getWordleScore: () => request('/wordle/score'),
 };

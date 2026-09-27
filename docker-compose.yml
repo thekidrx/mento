@@ -4,6 +4,7 @@ services:
     restart: unless-stopped
     environment:
       - PORT=3000
+      - TZ=${TZ}
       - SESSION_SECRET=${SESSION_SECRET}
       - USER1_USERNAME=${USER1_USERNAME}
       - USER1_PASSWORD=${USER1_PASSWORD}

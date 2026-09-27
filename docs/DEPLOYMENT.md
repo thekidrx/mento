@@ -68,6 +68,7 @@ Edit `.env` and set:
 - `USER1_USERNAME` / `USER1_PASSWORD` / `USER1_DISPLAY_NAME`
 - `USER2_USERNAME` / `USER2_PASSWORD` / `USER2_DISPLAY_NAME`
 - `TUNNEL_TOKEN` — the token copied in step 2
+- `TZ` — your IANA timezone (e.g. `America/New_York`), so the daily Wordle puzzle rolls over at your actual midnight, not UTC's
 
 `.env` is gitignored — it never leaves the Pi.
 

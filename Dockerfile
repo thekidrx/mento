@@ -14,7 +14,7 @@ COPY server/package*.json ./
 # arch/Node combo (e.g. Raspberry Pi's arm64), so it falls back to
 # compiling from source via node-gyp, which needs these.
 RUN apt-get update \
-  && apt-get install -y --no-install-recommends python3 make g++ \
+  && apt-get install -y --no-install-recommends python3 make g++ tzdata \
   && rm -rf /var/lib/apt/lists/* \
   && npm ci --omit=dev
 COPY server/ ./

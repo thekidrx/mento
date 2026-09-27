@@ -6,6 +6,7 @@ const { createAuthRouter, requireAuth } = require('./auth');
 const { createEventsRouter } = require('./routes/events');
 const { createNotesRouter } = require('./routes/notes');
 const { createWordleRouter } = require('./routes/wordle');
+const { createUsersRouter } = require('./routes/users');
 
 function createApp(db, options = {}) {
   const app = express();
@@ -27,6 +28,7 @@ function createApp(db, options = {}) {
   app.use('/api/events', requireAuth, createEventsRouter(db));
   app.use('/api/notes', requireAuth, createNotesRouter(db));
   app.use('/api/wordle', requireAuth, createWordleRouter(db));
+  app.use('/api/users', requireAuth, createUsersRouter(db));
 
   // Unknown /api routes must answer with JSON, never the SPA's index.html.
   app.use('/api', (req, res) => res.status(404).json({ error: 'Not found' }));

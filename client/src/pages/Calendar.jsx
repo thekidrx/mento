@@ -2,6 +2,11 @@ import { useEffect, useState } from 'react';
 import { MonthGrid } from '../components/MonthGrid';
 import { api } from '../api';
 
+const MONTH_NAMES = [
+  'January', 'February', 'March', 'April', 'May', 'June',
+  'July', 'August', 'September', 'October', 'November', 'December',
+];
+
 export function CalendarPage() {
   const today = new Date();
   const [year, setYear] = useState(today.getFullYear());
@@ -90,7 +95,7 @@ export function CalendarPage() {
     <div className="calendar-page">
       <div className="calendar-controls">
         <button onClick={() => changeMonth(-1)}>&lt;</button>
-        <span>{year}-{String(month + 1).padStart(2, '0')}</span>
+        <span>{MONTH_NAMES[month]} {year}</span>
         <button onClick={() => changeMonth(1)}>&gt;</button>
       </div>
       <MonthGrid year={year} month={month} events={events} onDayClick={handleDayClick} />

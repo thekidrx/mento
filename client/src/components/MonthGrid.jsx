@@ -9,6 +9,7 @@ export function MonthGrid({ year, month, events, onDayClick }) {
     if (!eventsByDate[event.date]) eventsByDate[event.date] = [];
     eventsByDate[event.date].push(event);
   }
+  const todayKey = toDateKey(new Date());
 
   return (
     <div className="month-grid">
@@ -22,9 +23,10 @@ export function MonthGrid({ year, month, events, onDayClick }) {
           if (!date) return <div key={i} className="month-grid-cell empty" />;
           const key = toDateKey(date);
           const dayEvents = eventsByDate[key] || [];
+          const isToday = key === todayKey;
           return (
             <div key={i} className="month-grid-cell" onClick={() => onDayClick(key)}>
-              <div className="month-grid-date">{date.getDate()}</div>
+              <div className={`month-grid-date${isToday ? ' today' : ''}`}>{date.getDate()}</div>
               {dayEvents.map((event) => (
                 <div key={event.id} className="month-grid-event">{event.title}</div>
               ))}

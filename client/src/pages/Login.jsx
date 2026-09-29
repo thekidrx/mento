@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { api } from '../api';
+import { CuteCat } from '../components/CuteCat';
 
 export function Login({ onLogin }) {
   const [username, setUsername] = useState('');
@@ -19,6 +20,7 @@ export function Login({ onLogin }) {
 
   return (
     <form className="login-form" onSubmit={handleSubmit}>
+      <CuteCat className="login-mascot" />
       <h1>R&amp;S</h1>
       <input
         name="username"

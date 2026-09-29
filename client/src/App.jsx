@@ -3,6 +3,7 @@ import { Login } from './pages/Login';
 import { CalendarPage } from './pages/Calendar';
 import { NotesPage } from './pages/Notes';
 import { WordlePage } from './pages/Wordle';
+import { ForestSpirit } from './components/ForestSpirit';
 import { api, setUnauthorizedHandler } from './api';
 
 export function App() {
@@ -26,7 +27,10 @@ export function App() {
   return (
     <div className="app">
       <header>
-        <span>Hi, {user.displayName}</span>
+        <span className="header-greeting">
+          <ForestSpirit className="header-mascot" />
+          Hi, {user.displayName}
+        </span>
         <nav>
           <button onClick={() => setTab('calendar')}>Calendar</button>
           <button onClick={() => setTab('notes')}>Notes</button>

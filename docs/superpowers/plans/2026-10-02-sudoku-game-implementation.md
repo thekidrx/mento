@@ -912,7 +912,7 @@ export function saveCells(storage, key, cells) {
 - [ ] **Step 4: Run test to verify it passes**
 
 Run: `cd client && node ./node_modules/vitest/vitest.mjs run src/__tests__/sudokuLogic.test.js`
-Expected: PASS (10 tests)
+Expected: PASS (11 tests)
 
 - [ ] **Step 5: Add the new methods to `client/src/api.js`**
 

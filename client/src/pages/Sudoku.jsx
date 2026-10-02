@@ -21,6 +21,7 @@ export function SudokuPage({ currentUserId }) {
   const [users, setUsers] = useState([]);
   const [selectedIndex, setSelectedIndex] = useState(null);
   const [wrongFlashIndex, setWrongFlashIndex] = useState(null);
+  const [error, setError] = useState('');
   const [, forceTick] = useState(0);
   const wrongFlashTimer = useRef(null);
 
@@ -37,19 +38,23 @@ export function SudokuPage({ currentUserId }) {
   }, [startedAt, finishedAt]);
 
   async function loadToday() {
-    const data = await api.getSudokuToday();
-    setPuzzle(data.puzzle);
-    setSolution(data.solution);
-    setStartedAt(data.startedAt);
-    setFinishedAt(data.finishedAt);
-    setOpponentFinished(data.opponentFinished);
-    setTodayResult(data.todayResult || null);
+    try {
+      const data = await api.getSudokuToday();
+      setPuzzle(data.puzzle);
+      setSolution(data.solution);
+      setStartedAt(data.startedAt);
+      setFinishedAt(data.finishedAt);
+      setOpponentFinished(data.opponentFinished);
+      setTodayResult(data.todayResult || null);
 
-    if (data.finishedAt) {
-      setCells(data.solution.split(''));
-    } else {
-      const saved = loadSavedCells(window.localStorage, `sudoku-cells-${currentUserId}-${data.puzzle}`);
-      setCells(saved || data.puzzle.split(''));
+      if (data.finishedAt) {
+        setCells(data.solution.split(''));
+      } else {
+        const saved = loadSavedCells(window.localStorage, `sudoku-cells-${currentUserId}-${data.puzzle}`);
+        setCells(saved || data.puzzle.split(''));
+      }
+    } catch (err) {
+      setError(err.message);
     }
   }
 
@@ -62,6 +67,7 @@ export function SudokuPage({ currentUserId }) {
   }
 
   async function handleDigit(digit) {
+    setError('');
     if (selectedIndex === null || finishedAt) return;
     if (puzzle[selectedIndex] !== '0') return;
 
@@ -77,15 +83,19 @@ export function SudokuPage({ currentUserId }) {
     setCells(nextCells);
     saveCells(window.localStorage, `sudoku-cells-${currentUserId}-${puzzle}`, nextCells);
 
-    if (!startedAt) {
-      const result = await api.startSudoku();
-      setStartedAt(result.startedAt);
-    }
+    try {
+      if (!startedAt) {
+        const result = await api.startSudoku();
+        setStartedAt(result.startedAt);
+      }
 
-    if (isGridComplete(nextCells)) {
-      const result = await api.finishSudoku();
-      setFinishedAt(result.finishedAt);
-      loadScore();
+      if (isGridComplete(nextCells)) {
+        const result = await api.finishSudoku();
+        setFinishedAt(result.finishedAt);
+        loadScore();
+      }
+    } catch (err) {
+      setError(err.message);
     }
   }
 
@@ -144,6 +154,7 @@ export function SudokuPage({ currentUserId }) {
           );
         })}
       </div>
+      {error && <p className="error">{error}</p>}
       {!finishedAt && (
         <div className="sudoku-numpad">
           {[1, 2, 3, 4, 5, 6, 7, 8, 9].map((n) => (

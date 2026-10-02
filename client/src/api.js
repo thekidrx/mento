@@ -39,4 +39,8 @@ export const api = {
   submitWordleGuess: (guess) =>
     request('/wordle/guess', { method: 'POST', body: JSON.stringify({ guess }) }),
   getWordleScore: () => request('/wordle/score'),
+  getSudokuToday: () => request('/sudoku/today'),
+  startSudoku: () => request('/sudoku/start', { method: 'POST' }),
+  finishSudoku: () => request('/sudoku/finish', { method: 'POST' }),
+  getSudokuScore: () => request('/sudoku/score'),
 };

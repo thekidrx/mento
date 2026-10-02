@@ -36,3 +36,19 @@ CREATE TABLE IF NOT EXISTS wordle_guesses (
   created_at TEXT NOT NULL DEFAULT (datetime('now')),
   UNIQUE(day_id, user_id, guess)
 );
+
+CREATE TABLE IF NOT EXISTS sudoku_days (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  date TEXT UNIQUE NOT NULL,
+  puzzle TEXT NOT NULL,
+  solution TEXT NOT NULL
+);
+
+CREATE TABLE IF NOT EXISTS sudoku_results (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  day_id INTEGER NOT NULL REFERENCES sudoku_days(id),
+  user_id INTEGER NOT NULL REFERENCES users(id),
+  started_at TEXT,
+  finished_at TEXT,
+  UNIQUE(day_id, user_id)
+);

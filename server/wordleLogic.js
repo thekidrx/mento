@@ -1,5 +1,6 @@
 const fs = require('fs');
 const path = require('path');
+const { computeScoreTally } = require('./gameScoring');
 
 function computeFeedback(guess, answer) {
   const result = new Array(5).fill('B');
@@ -58,17 +59,6 @@ function computeGuessCount(guesses, maxGuesses = 6) {
   if (solvedIndex !== -1) return solvedIndex + 1;
   if (guesses.length >= maxGuesses) return Infinity;
   return null;
-}
-
-function computeScoreTally(days, userAId, userBId) {
-  const tally = { [userAId]: 0, [userBId]: 0 };
-  for (const day of days) {
-    const a = day.counts[userAId];
-    const b = day.counts[userBId];
-    if (a < b) tally[userAId] += 1;
-    else if (b < a) tally[userBId] += 1;
-  }
-  return tally;
 }
 
 module.exports = {

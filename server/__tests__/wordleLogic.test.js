@@ -4,7 +4,6 @@ const {
   loadValidGuessSet,
   pickDailyWord,
   computeGuessCount,
-  computeScoreTally,
 } = require('../wordleLogic');
 
 describe('computeFeedback', () => {
@@ -72,14 +71,3 @@ describe('computeGuessCount', () => {
   });
 });
 
-describe('computeScoreTally', () => {
-  it('awards a point to whoever had fewer guesses each day, and nothing on a tie', () => {
-    const days = [
-      { counts: { 1: 2, 2: 4 } },   // user 1 wins
-      { counts: { 1: 5, 2: 5 } },   // tie, no point
-      { counts: { 1: Infinity, 2: 3 } }, // user 2 wins (user 1 failed)
-      { counts: { 1: Infinity, 2: Infinity } }, // both failed, tie, no point
-    ];
-    expect(computeScoreTally(days, 1, 2)).toEqual({ 1: 1, 2: 1 });
-  });
-});

@@ -48,7 +48,7 @@ export function SudokuPage({ currentUserId }) {
     if (data.finishedAt) {
       setCells(data.solution.split(''));
     } else {
-      const saved = loadSavedCells(window.localStorage, `sudoku-cells-${data.puzzle}`);
+      const saved = loadSavedCells(window.localStorage, `sudoku-cells-${currentUserId}-${data.puzzle}`);
       setCells(saved || data.puzzle.split(''));
     }
   }
@@ -75,7 +75,7 @@ export function SudokuPage({ currentUserId }) {
     const nextCells = cells.slice();
     nextCells[selectedIndex] = String(digit);
     setCells(nextCells);
-    saveCells(window.localStorage, `sudoku-cells-${puzzle}`, nextCells);
+    saveCells(window.localStorage, `sudoku-cells-${currentUserId}-${puzzle}`, nextCells);
 
     if (!startedAt) {
       const result = await api.startSudoku();

@@ -311,3 +311,75 @@ header {
   background: #787c7e;
   color: white;
 }
+
+/* Sudoku */
+
+.sudoku-score {
+  font-weight: bold;
+  margin-bottom: 8px;
+}
+
+.sudoku-timer {
+  font-weight: 600;
+  color: #6b5560;
+  margin-bottom: 12px;
+}
+
+.sudoku-grid {
+  display: grid;
+  grid-template-columns: repeat(9, 36px);
+  grid-template-rows: repeat(9, 36px);
+  background: #4a3540;
+  gap: 1px;
+  padding: 2px;
+  border-radius: 12px;
+  margin-bottom: 16px;
+  width: fit-content;
+}
+
+.sudoku-cell {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #fffafc;
+  color: #4a3540;
+  font-size: 1.1rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.sudoku-cell.given {
+  background: #f6e8ee;
+  color: #6b5560;
+  cursor: default;
+}
+
+.sudoku-cell.selected {
+  outline: 3px solid #f4b8d0;
+  outline-offset: -3px;
+}
+
+.sudoku-cell.wrong-flash {
+  background: #f6c6c6;
+}
+
+.sudoku-cell.border-right-thick {
+  border-right: 2px solid #4a3540;
+}
+
+.sudoku-cell.border-bottom-thick {
+  border-bottom: 2px solid #4a3540;
+}
+
+.sudoku-numpad {
+  display: flex;
+  gap: 6px;
+  margin-bottom: 12px;
+}
+
+.sudoku-numpad button {
+  width: 36px;
+  height: 36px;
+  padding: 0;
+  border-radius: 8px;
+}

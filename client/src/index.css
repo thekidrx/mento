@@ -83,6 +83,12 @@ button:focus-visible, input:focus-visible, textarea:focus-visible {
   display: block;
 }
 
+/* The form-field rules below set a display value, which would otherwise
+   un-hide anything carrying the hidden attribute. */
+[hidden] {
+  display: none !important;
+}
+
 .sr-only {
   position: absolute;
   width: 1px;
@@ -412,7 +418,7 @@ input:focus, textarea:focus {
   display: inline-flex;
   align-items: center;
   gap: 8px;
-  padding: 8px 16px;
+  padding: 8px 14px;
   border-radius: 999px;
   color: var(--ink-soft);
   font-weight: 700;
@@ -441,6 +447,7 @@ input:focus, textarea:focus {
   align-items: center;
   gap: 8px;
   font-weight: 600;
+  white-space: nowrap;
 }
 
 .user-chip .avatar {
@@ -956,6 +963,233 @@ button.month-grid-cell:hover {
   margin-top: 16px;
 }
 
+/* ---------- Photos ---------- */
+
+.photos-page {
+  max-width: 920px;
+  margin: 0 auto;
+}
+
+.photos-heading {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.photo-month {
+  margin-bottom: 28px;
+}
+
+.photo-month-title {
+  margin-bottom: 10px;
+  font-family: var(--font-display);
+  font-size: 1.2rem;
+  font-weight: 700;
+}
+
+.photo-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+  gap: 6px;
+}
+
+.photo-thumb {
+  display: block;
+  aspect-ratio: 1;
+  overflow: hidden;
+  border-radius: 12px;
+  background: var(--pink-100);
+  transition: transform 0.12s ease, box-shadow 0.15s ease;
+}
+
+.photo-thumb:hover {
+  box-shadow: var(--shadow);
+  transform: translateY(-1px);
+}
+
+.photo-thumb img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.photo-staging {
+  padding: 16px;
+  margin-bottom: 24px;
+}
+
+.photo-staged-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.photo-staged {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 12px 0;
+  border-bottom: 1px solid var(--line);
+}
+
+.photo-staged:first-child {
+  padding-top: 0;
+}
+
+.photo-staged:last-child {
+  margin-bottom: 14px;
+}
+
+.photo-staged-preview {
+  display: block;
+  width: 72px;
+  height: 72px;
+  flex-shrink: 0;
+  border-radius: 10px;
+  object-fit: cover;
+  background: var(--pink-100);
+}
+
+.photo-staged-fields {
+  display: grid;
+  grid-template-columns: 170px minmax(0, 1fr);
+  gap: 0 12px;
+  flex: 1;
+  min-width: 0;
+}
+
+.photo-staged-fields .field {
+  margin-bottom: 0;
+  min-width: 0;
+}
+
+.photo-staged-fields .error {
+  grid-column: 1 / -1;
+  margin: 10px 0 0;
+}
+
+.photo-viewer {
+  position: fixed;
+  inset: 0;
+  z-index: 50;
+  display: flex;
+  flex-direction: column;
+  background: rgba(45, 28, 36, 0.94);
+  color: #fff;
+}
+
+.photo-viewer-close {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  z-index: 1;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.14);
+  color: #fff;
+}
+
+.photo-viewer-close:hover,
+.photo-viewer-nav:hover:not(:disabled) {
+  background: rgba(255, 255, 255, 0.26);
+}
+
+.photo-viewer-stage {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex: 1;
+  min-height: 0;
+  padding: 64px 12px 8px;
+}
+
+.photo-viewer-image {
+  flex: 1;
+  min-width: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+
+.photo-viewer-nav {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  height: 44px;
+  flex-shrink: 0;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.14);
+  color: #fff;
+}
+
+.photo-viewer-nav:disabled {
+  opacity: 0.25;
+  cursor: default;
+}
+
+.photo-viewer-close:focus-visible,
+.photo-viewer-nav:focus-visible,
+.btn-on-dark:focus-visible {
+  box-shadow: 0 0 0 3px rgba(255, 255, 255, 0.6);
+}
+
+.photo-viewer-info {
+  width: 100%;
+  max-width: 640px;
+  max-height: 45vh;
+  margin: 0 auto;
+  padding: 8px 20px calc(20px + env(safe-area-inset-bottom));
+  overflow-y: auto;
+  text-align: center;
+}
+
+.photo-viewer-caption {
+  font-size: 1.05rem;
+  font-weight: 600;
+  overflow-wrap: anywhere;
+}
+
+.photo-viewer-meta {
+  margin-top: 2px;
+  font-size: 0.88rem;
+  color: #e8cfd9;
+}
+
+.photo-viewer-info .form-actions {
+  justify-content: center;
+  margin-top: 12px;
+}
+
+.photo-viewer-confirm {
+  margin-top: 12px;
+  font-weight: 700;
+}
+
+.photo-viewer-form {
+  text-align: left;
+}
+
+.photo-viewer-form .field-label {
+  color: #f3dfe7;
+}
+
+.btn-on-dark {
+  border: 1px solid rgba(255, 255, 255, 0.4);
+  color: #fff;
+}
+
+.btn-on-dark:hover {
+  background: rgba(255, 255, 255, 0.14);
+}
+
 /* ---------- Games (shared) ---------- */
 
 .game-page {
@@ -1234,7 +1468,7 @@ button.month-grid-cell:hover {
   }
 }
 
-@media (max-width: 760px) {
+@media (max-width: 1000px) {
   /* A backdrop-filter here would make the top bar the containing block for
      the fixed bottom tab bar, pinning the tabs to the top instead. */
   .topbar {
@@ -1279,6 +1513,32 @@ button.month-grid-cell:hover {
     box-shadow: none;
   }
 
+  .page {
+    padding-bottom: calc(96px + env(safe-area-inset-bottom));
+  }
+}
+
+@media (max-width: 1180px) and (min-width: 1001px) {
+  .user-name {
+    display: none;
+  }
+
+  .tab {
+    padding: 8px 12px;
+  }
+}
+
+@media (max-width: 760px) {
+  .tabs {
+    padding-left: 4px;
+    padding-right: 4px;
+  }
+
+  .tab {
+    padding: 6px 2px;
+    font-size: 0.68rem;
+  }
+
   .list-create .btn {
     padding: 8px 16px;
   }
@@ -1289,6 +1549,29 @@ button.month-grid-cell:hover {
 
   .page {
     padding: 20px 16px calc(96px + env(safe-area-inset-bottom));
+  }
+
+  .photo-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 4px;
+  }
+
+  .photo-thumb {
+    border-radius: 8px;
+  }
+
+  .photo-staged-fields {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 10px;
+  }
+
+  .photo-viewer-stage {
+    padding: 64px 4px 8px;
+    gap: 2px;
+  }
+
+  .photo-viewer-info {
+    max-height: 45vh;
   }
 
   .page-title {

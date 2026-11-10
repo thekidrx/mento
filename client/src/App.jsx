@@ -3,6 +3,7 @@ import { Login } from './pages/Login';
 import { CalendarPage } from './pages/Calendar';
 import { NotesPage } from './pages/Notes';
 import { ListsPage } from './pages/Lists';
+import { PhotosPage } from './pages/Photos';
 import { WordlePage } from './pages/Wordle';
 import { SudokuPage } from './pages/Sudoku';
 import { ForestSpirit } from './components/ForestSpirit';
@@ -10,6 +11,7 @@ import {
   CalendarIcon,
   NotesIcon,
   ListIcon,
+  PhotoIcon,
   WordleIcon,
   SudokuIcon,
   LogoutIcon,
@@ -20,6 +22,7 @@ const TABS = [
   { id: 'calendar', label: 'Calendar', Icon: CalendarIcon },
   { id: 'notes', label: 'Notes', Icon: NotesIcon },
   { id: 'lists', label: 'Lists', Icon: ListIcon },
+  { id: 'photos', label: 'Photos', Icon: PhotoIcon },
   { id: 'wordle', label: 'Wordle', Icon: WordleIcon },
   { id: 'sudoku', label: 'Sudoku', Icon: SudokuIcon },
 ];
@@ -82,6 +85,7 @@ export function App() {
         {tab === 'calendar' && <CalendarPage />}
         {tab === 'notes' && <NotesPage currentUserId={user.id} />}
         {tab === 'lists' && <ListsPage />}
+        {tab === 'photos' && <PhotosPage currentUserId={user.id} />}
         {tab === 'wordle' && <WordlePage currentUserId={user.id} />}
         {tab === 'sudoku' && <SudokuPage currentUserId={user.id} />}
       </main>

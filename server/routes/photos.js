@@ -2,6 +2,7 @@ const crypto = require('crypto');
 const express = require('express');
 const fs = require('fs');
 const path = require('path');
+const { pipeline } = require('stream');
 const { decodeJpeg, isValidTakenOn, cleanCaption, MAX_CAPTION_LENGTH } = require('../photoValidation');
 
 const MAX_IMAGE_BYTES = 5 * 1024 * 1024;
@@ -107,17 +108,37 @@ function createPhotosRouter(db, photosDir) {
   function sendFile(which) {
     return (req, res) => {
       const row = findPhoto(req.params.id);
-      const file = row && filePaths(row)[which];
-      if (!file || !fs.existsSync(file)) {
+      if (!row) {
         return res.status(404).json({ error: 'Photo not found' });
       }
-      res.set({
-        'Content-Type': 'image/jpeg',
-        // The bytes behind an id never change, so the browser may keep them.
-        'Cache-Control': 'private, max-age=31536000, immutable',
-        'X-Content-Type-Options': 'nosniff',
+      const stream = fs.createReadStream(filePaths(row)[which]);
+      let failed = false;
+      // Without this listener a missing or unreadable file would be an
+      // uncaught exception and take the whole server down.
+      stream.on('error', () => {
+        if (failed) return;
+        failed = true;
+        if (res.headersSent) {
+          res.destroy();
+          return;
+        }
+        // Set for the image; they must not describe the error reply.
+        res.removeHeader('Content-Type');
+        res.removeHeader('Cache-Control');
+        res.status(404).json({ error: 'Photo not found' });
       });
-      return fs.createReadStream(file).pipe(res);
+      // Headers go out only once the file has opened, so a missing file is a
+      // clean 404. pipeline also closes the file if the client goes away.
+      stream.on('open', () => {
+        res.set({
+          'Content-Type': 'image/jpeg',
+          // The bytes behind an id never change, so the browser may keep them.
+          'Cache-Control': 'private, max-age=31536000, immutable',
+          'X-Content-Type-Options': 'nosniff',
+        });
+        pipeline(stream, res, () => {});
+      });
+      return undefined;
     };
   }
 
@@ -156,9 +177,15 @@ function createPhotosRouter(db, photosDir) {
     if (!row) return;
     // Row first: a leftover file is harmless, a row without its file is not.
     db.prepare('DELETE FROM photos WHERE id = ?').run(row.id);
-    const files = filePaths(row);
-    fs.rmSync(files.image, { force: true });
-    fs.rmSync(files.thumb, { force: true });
+    // The photo is gone as far as anyone can tell once the row is. A file
+    // that will not delete is logged, not reported as a failed delete.
+    for (const file of Object.values(filePaths(row))) {
+      try {
+        fs.rmSync(file, { force: true });
+      } catch (err) {
+        console.error(`Could not remove photo file ${file}:`, err.message);
+      }
+    }
     res.json({ ok: true });
   });
 

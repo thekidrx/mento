@@ -16,10 +16,16 @@ if [ -d "$DATA_DIR/photos" ]; then
   mkdir -p "$BACKUP_DIR/photos"
   # A plain loop rather than `cp -n`: some coreutils versions make `cp -n`
   # exit non-zero when it skips a file, which would abort this script.
+  # Left behind only if an earlier run was cut off mid-copy.
+  rm -f "$BACKUP_DIR/photos"/*.tmp
   for photo in "$DATA_DIR/photos"/*; do
     [ -f "$photo" ] || continue
     target="$BACKUP_DIR/photos/$(basename "$photo")"
-    [ -e "$target" ] || cp "$photo" "$target"
+    [ -e "$target" ] && continue
+    # Copy under a temporary name and rename, so a copy cut short (power
+    # loss, full disk) is never mistaken for a finished backup next time.
+    cp "$photo" "$target.tmp"
+    mv "$target.tmp" "$target"
   done
 fi
 

@@ -29,9 +29,12 @@ export function PhotoViewer({ photos, photoId, currentUserId, onNavigate, onClos
   const next = index !== -1 && index < photos.length - 1 ? photos[index + 1] : null;
 
   // Deleted elsewhere, or gone after a reload: there is nothing to show.
+  // photoId is a dependency so this also runs when asked to show a photo
+  // that has just vanished; otherwise the viewer would sit open and empty
+  // with the page behind it still locked.
   useEffect(() => {
     if (!photo && !deleting.current) onClose();
-  }, [photo]);
+  }, [photo, photoId]);
 
   // Take focus on open, hand it back on close, and stop the page behind scrolling.
   useEffect(() => {

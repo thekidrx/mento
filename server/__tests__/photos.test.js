@@ -159,16 +159,30 @@ describe('photo upload and list', () => {
     expect(fs.readdirSync(photosDir)).toEqual([]);
   });
 
-  it('answers 401, not 413, to a logged-out client sending a large body', async () => {
+  it('checks the login before reading the body', async () => {
+    // Broken JSON makes the order visible: a parser that ran first would
+    // answer 400 for the body before the login check could answer 401.
     const res = await request(app)
       .post('/api/photos')
-      .send({ image: 'A'.repeat(200 * 1024) });
+      .set('Content-Type', 'application/json')
+      .send('{"image": "AAAA');
     expect(res.status).toBe(401);
+  });
+
+  it('answers a logged-in client sending broken JSON with 400', async () => {
+    const res = await ryan
+      .post('/api/photos')
+      .set('Content-Type', 'application/json')
+      .send('{"image": "AAAA');
+    expect(res.status).toBe(400);
+    expect(res.body.error).toBe('Photo must be a JPEG image');
   });
 
   it('keeps the default body limit on other routes', async () => {
     const res = await ryan.post('/api/notes').send({ message: 'x'.repeat(200 * 1024) });
-    expect(res.status).toBeGreaterThanOrEqual(400);
+    // 500 is the app's long-standing answer to any body-parser error on
+    // these routes; what matters here is that the note was not accepted.
+    expect(res.status).toBe(500);
     expect((await ryan.get('/api/notes')).body).toEqual([]);
   });
 
@@ -300,6 +314,30 @@ describe('photo files, edit and delete', () => {
     expect(res.body).toEqual({ ok: true });
     expect((await ryan.get('/api/photos')).body).toEqual([]);
     expect(fs.readdirSync(photosDir)).toEqual([]);
+  });
+
+  it('answers 404 instead of crashing when the file cannot be read', async () => {
+    // A directory where the file should be makes the read fail after it starts.
+    const file = fileNamed('.jpg');
+    fs.rmSync(file);
+    fs.mkdirSync(file);
+    const res = await ryan.get(`/api/photos/${id}/image`);
+    expect(res.status).toBe(404);
+    expect(res.body.error).toBe('Photo not found');
+    expect(res.headers['cache-control']).toBeUndefined();
+    // The server is still answering.
+    expect((await ryan.get(`/api/photos/${id}/thumb`)).status).toBe(200);
+  });
+
+  it('reports a delete as done even if a file cannot be removed', async () => {
+    const file = fileNamed('.jpg');
+    fs.rmSync(file);
+    fs.mkdirSync(file);
+    fs.writeFileSync(path.join(file, 'inside'), 'x');
+    const res = await ryan.delete(`/api/photos/${id}`);
+    expect(res.status).toBe(200);
+    expect(res.body).toEqual({ ok: true });
+    expect((await ryan.get('/api/photos')).body).toEqual([]);
   });
 
   it('deletes the row even if a file is already missing', async () => {

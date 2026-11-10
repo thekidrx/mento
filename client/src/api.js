@@ -17,7 +17,9 @@ async function request(path, options = {}) {
   }
   const data = await res.json().catch(() => ({}));
   if (!res.ok) {
-    throw new Error(data.error || 'Request failed');
+    const err = new Error(data.error || 'Request failed');
+    err.status = res.status;
+    throw err;
   }
   return data;
 }
@@ -34,6 +36,22 @@ export const api = {
   getNotes: () => request('/notes'),
   createNote: (message) => request('/notes', { method: 'POST', body: JSON.stringify({ message }) }),
   deleteNote: (id) => request(`/notes/${id}`, { method: 'DELETE' }),
+  getLists: () => request('/lists'),
+  createList: (name) => request('/lists', { method: 'POST', body: JSON.stringify({ name }) }),
+  getList: (id) => request(`/lists/${id}`),
+  renameList: (id, name) =>
+    request(`/lists/${id}`, { method: 'PUT', body: JSON.stringify({ name }) }),
+  deleteList: (id) => request(`/lists/${id}`, { method: 'DELETE' }),
+  addListItem: (listId, text) =>
+    request(`/lists/${listId}/items`, { method: 'POST', body: JSON.stringify({ text }) }),
+  setListItemChecked: (listId, itemId, checked) =>
+    request(`/lists/${listId}/items/${itemId}`, {
+      method: 'PUT',
+      body: JSON.stringify({ checked }),
+    }),
+  deleteListItem: (listId, itemId) =>
+    request(`/lists/${listId}/items/${itemId}`, { method: 'DELETE' }),
+  clearCheckedItems: (listId) => request(`/lists/${listId}/clear-checked`, { method: 'POST' }),
   getUsers: () => request('/users'),
   getWordleToday: () => request('/wordle/today'),
   submitWordleGuess: (guess) =>

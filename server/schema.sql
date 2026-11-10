@@ -69,3 +69,12 @@ CREATE TABLE IF NOT EXISTS list_items (
   checked_by INTEGER REFERENCES users(id),
   checked_at TEXT
 );
+
+CREATE TABLE IF NOT EXISTS photos (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  file_key TEXT UNIQUE NOT NULL,
+  taken_on TEXT NOT NULL,
+  caption TEXT,
+  created_by INTEGER NOT NULL REFERENCES users(id),
+  created_at TEXT NOT NULL DEFAULT (datetime('now'))
+);

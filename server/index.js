@@ -1,5 +1,5 @@
 const path = require('path');
-const { createDb } = require('./db');
+const { createDb, DB_PATH } = require('./db');
 const { seedUsers } = require('./seed');
 const { createApp } = require('./app');
 
@@ -15,7 +15,13 @@ if (process.env.NODE_ENV === 'production') {
 const db = createDb();
 seedUsers(db);
 
-const app = createApp(db, { staticDir: path.join(__dirname, '..', 'client', 'dist') });
+// Beside the database, so photos live on the same mounted volume and survive rebuilds.
+const photosDir = process.env.PHOTOS_DIR || path.join(path.dirname(DB_PATH), 'photos');
+
+const app = createApp(db, {
+  staticDir: path.join(__dirname, '..', 'client', 'dist'),
+  photosDir,
+});
 
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {

@@ -6,13 +6,13 @@ const { createAuthRouter, requireAuth } = require('./auth');
 const { createEventsRouter } = require('./routes/events');
 const { createNotesRouter } = require('./routes/notes');
 const { createListsRouter } = require('./routes/lists');
+const { createPhotosRouter, photosBodyError } = require('./routes/photos');
 const { createWordleRouter } = require('./routes/wordle');
 const { createUsersRouter } = require('./routes/users');
 const { createSudokuRouter } = require('./routes/sudoku');
 
 function createApp(db, options = {}) {
   const app = express();
-  app.use(express.json());
   app.use(session({
     store: new SqliteStore({
       client: db,
@@ -23,6 +23,22 @@ function createApp(db, options = {}) {
     saveUninitialized: false,
     cookie: { maxAge: 30 * 24 * 60 * 60 * 1000 },
   }));
+
+  // Photo uploads need a much larger body than anything else. They get their
+  // own parser, placed after the login check so a logged-out client cannot
+  // make the server read megabytes, and before the default parser below
+  // (which skips a body that has already been parsed).
+  if (options.photosDir) {
+    app.use(
+      '/api/photos',
+      requireAuth,
+      express.json({ limit: '8mb' }),
+      createPhotosRouter(db, options.photosDir),
+      photosBodyError
+    );
+  }
+
+  app.use(express.json());
 
   app.get('/api/health', (req, res) => res.json({ ok: true }));
 

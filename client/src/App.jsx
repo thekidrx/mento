@@ -2,15 +2,24 @@ import { useEffect, useState } from 'react';
 import { Login } from './pages/Login';
 import { CalendarPage } from './pages/Calendar';
 import { NotesPage } from './pages/Notes';
+import { ListsPage } from './pages/Lists';
 import { WordlePage } from './pages/Wordle';
 import { SudokuPage } from './pages/Sudoku';
 import { ForestSpirit } from './components/ForestSpirit';
-import { CalendarIcon, NotesIcon, WordleIcon, SudokuIcon, LogoutIcon } from './components/Icons';
+import {
+  CalendarIcon,
+  NotesIcon,
+  ListIcon,
+  WordleIcon,
+  SudokuIcon,
+  LogoutIcon,
+} from './components/Icons';
 import { api, setUnauthorizedHandler } from './api';
 
 const TABS = [
   { id: 'calendar', label: 'Calendar', Icon: CalendarIcon },
   { id: 'notes', label: 'Notes', Icon: NotesIcon },
+  { id: 'lists', label: 'Lists', Icon: ListIcon },
   { id: 'wordle', label: 'Wordle', Icon: WordleIcon },
   { id: 'sudoku', label: 'Sudoku', Icon: SudokuIcon },
 ];
@@ -72,6 +81,7 @@ export function App() {
       <main className="page">
         {tab === 'calendar' && <CalendarPage />}
         {tab === 'notes' && <NotesPage currentUserId={user.id} />}
+        {tab === 'lists' && <ListsPage />}
         {tab === 'wordle' && <WordlePage currentUserId={user.id} />}
         {tab === 'sudoku' && <SudokuPage currentUserId={user.id} />}
       </main>

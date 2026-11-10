@@ -177,3 +177,141 @@ describe('photo upload and list', () => {
     expect(res.status).toBe(401);
   });
 });
+
+describe('photo files, edit and delete', () => {
+  let id;
+
+  function binaryParser(res, callback) {
+    const chunks = [];
+    res.on('data', (chunk) => chunks.push(chunk));
+    res.on('end', () => callback(null, Buffer.concat(chunks)));
+  }
+
+  function fileNamed(suffix) {
+    const name = fs.readdirSync(photosDir).find((f) => f.endsWith(suffix) && (suffix === '.thumb.jpg' || !f.endsWith('.thumb.jpg')));
+    return path.join(photosDir, name);
+  }
+
+  beforeEach(async () => {
+    const res = await ryan.post('/api/photos').send(body());
+    id = res.body.id;
+  });
+
+  it('serves the exact image and thumbnail bytes with private caching', async () => {
+    const image = await sam.get(`/api/photos/${id}/image`).buffer(true).parse(binaryParser);
+    expect(image.status).toBe(200);
+    expect(image.headers['content-type']).toBe('image/jpeg');
+    expect(image.headers['cache-control']).toBe('private, max-age=31536000, immutable');
+    expect(image.headers['x-content-type-options']).toBe('nosniff');
+    expect(image.body.equals(JPEG)).toBe(true);
+
+    const thumb = await sam.get(`/api/photos/${id}/thumb`).buffer(true).parse(binaryParser);
+    expect(thumb.status).toBe(200);
+    expect(thumb.headers['content-type']).toBe('image/jpeg');
+    expect(thumb.body.equals(THUMB)).toBe(true);
+  });
+
+  it('refuses image requests from a logged-out client', async () => {
+    expect((await request(app).get(`/api/photos/${id}/image`)).status).toBe(401);
+    expect((await request(app).get(`/api/photos/${id}/thumb`)).status).toBe(401);
+  });
+
+  it.each(['999', 'abc', '1abc', '..%2F..%2Fapp.db', '%2e%2e'])(
+    'returns 404 for photo id %s on every route',
+    async (bad) => {
+      const responses = [
+        await ryan.get(`/api/photos/${bad}/image`),
+        await ryan.get(`/api/photos/${bad}/thumb`),
+        await ryan.put(`/api/photos/${bad}`).send({ taken_on: '2026-11-01' }),
+        await ryan.delete(`/api/photos/${bad}`),
+      ];
+      for (const res of responses) {
+        expect(res.status).toBe(404);
+        expect(res.body.error).toBe('Photo not found');
+      }
+      expect(fs.readdirSync(photosDir)).toHaveLength(2);
+    }
+  );
+
+  it('returns 404 when the row exists but its file is gone', async () => {
+    fs.rmSync(fileNamed('.jpg'));
+    const image = await ryan.get(`/api/photos/${id}/image`);
+    expect(image.status).toBe(404);
+    expect(image.body.error).toBe('Photo not found');
+    expect((await ryan.get(`/api/photos/${id}/thumb`)).status).toBe(200);
+  });
+
+  it('lets the uploader change the date and caption', async () => {
+    const res = await ryan
+      .put(`/api/photos/${id}`)
+      .send({ taken_on: '2026-10-31', caption: ' Halloween ' });
+    expect(res.status).toBe(200);
+    expect(res.body).toMatchObject({
+      id,
+      taken_on: '2026-10-31',
+      caption: 'Halloween',
+      display_name: 'Ryan',
+    });
+    expect(res.body).not.toHaveProperty('file_key');
+    expect((await sam.get('/api/photos')).body[0].caption).toBe('Halloween');
+  });
+
+  it('clears the caption when it is sent empty', async () => {
+    const res = await ryan.put(`/api/photos/${id}`).send({ taken_on: '2026-11-01', caption: '' });
+    expect(res.status).toBe(200);
+    expect(res.body.caption).toBeNull();
+  });
+
+  it.each([
+    [{ taken_on: '2026-02-30' }, 'A valid date is required'],
+    [{ caption: 'New' }, 'A valid date is required'],
+    [{ taken_on: '2026-11-01', caption: 'a'.repeat(201) }, 'Caption must be 200 characters or fewer'],
+  ])('rejects edit %j', async (edit, error) => {
+    const res = await ryan.put(`/api/photos/${id}`).send(edit);
+    expect(res.status).toBe(400);
+    expect(res.body.error).toBe(error);
+    expect((await ryan.get('/api/photos')).body[0]).toMatchObject({
+      taken_on: '2026-11-01',
+      caption: 'Beach',
+    });
+  });
+
+  it('stops the other user editing or deleting', async () => {
+    const put = await sam.put(`/api/photos/${id}`).send({ taken_on: '2026-10-31' });
+    expect(put.status).toBe(403);
+    expect(put.body.error).toBe('You can only change photos you added');
+
+    const del = await sam.delete(`/api/photos/${id}`);
+    expect(del.status).toBe(403);
+    expect(del.body.error).toBe('You can only change photos you added');
+
+    expect(fs.readdirSync(photosDir)).toHaveLength(2);
+    expect((await ryan.get('/api/photos')).body[0].taken_on).toBe('2026-11-01');
+  });
+
+  it('answers 403 to the other user even when their edit is invalid', async () => {
+    const res = await sam.put(`/api/photos/${id}`).send({ taken_on: 'nonsense' });
+    expect(res.status).toBe(403);
+  });
+
+  it('deletes the row and both files', async () => {
+    const res = await ryan.delete(`/api/photos/${id}`);
+    expect(res.status).toBe(200);
+    expect(res.body).toEqual({ ok: true });
+    expect((await ryan.get('/api/photos')).body).toEqual([]);
+    expect(fs.readdirSync(photosDir)).toEqual([]);
+  });
+
+  it('deletes the row even if a file is already missing', async () => {
+    fs.rmSync(fileNamed('.thumb.jpg'));
+    const res = await ryan.delete(`/api/photos/${id}`);
+    expect(res.status).toBe(200);
+    expect((await ryan.get('/api/photos')).body).toEqual([]);
+    expect(fs.readdirSync(photosDir)).toEqual([]);
+  });
+
+  it('rejects unauthenticated edit and delete', async () => {
+    expect((await request(app).put(`/api/photos/${id}`).send({})).status).toBe(401);
+    expect((await request(app).delete(`/api/photos/${id}`)).status).toBe(401);
+  });
+});

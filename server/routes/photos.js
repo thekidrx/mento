@@ -90,6 +90,78 @@ function createPhotosRouter(db, photosDir) {
     res.status(201).json(publicPhoto(id));
   });
 
+  // The full row, including file_key. Only a plain number can match, so
+  // nothing path-like from the URL ever gets near the filesystem.
+  function findPhoto(id) {
+    if (!/^\d+$/.test(id)) return undefined;
+    return db.prepare('SELECT * FROM photos WHERE id = ?').get(id);
+  }
+
+  function filePaths(row) {
+    return {
+      image: path.join(photosDir, `${row.file_key}.jpg`),
+      thumb: path.join(photosDir, `${row.file_key}.thumb.jpg`),
+    };
+  }
+
+  function sendFile(which) {
+    return (req, res) => {
+      const row = findPhoto(req.params.id);
+      const file = row && filePaths(row)[which];
+      if (!file || !fs.existsSync(file)) {
+        return res.status(404).json({ error: 'Photo not found' });
+      }
+      res.set({
+        'Content-Type': 'image/jpeg',
+        // The bytes behind an id never change, so the browser may keep them.
+        'Cache-Control': 'private, max-age=31536000, immutable',
+        'X-Content-Type-Options': 'nosniff',
+      });
+      return fs.createReadStream(file).pipe(res);
+    };
+  }
+
+  router.get('/:id/image', sendFile('image'));
+  router.get('/:id/thumb', sendFile('thumb'));
+
+  // Sends the 404 or 403 and returns null unless the caller uploaded this photo.
+  function findOwnPhoto(req, res) {
+    const row = findPhoto(req.params.id);
+    if (!row) {
+      res.status(404).json({ error: 'Photo not found' });
+      return null;
+    }
+    if (row.created_by !== req.session.userId) {
+      res.status(403).json({ error: 'You can only change photos you added' });
+      return null;
+    }
+    return row;
+  }
+
+  router.put('/:id', (req, res) => {
+    const row = findOwnPhoto(req, res);
+    if (!row) return;
+    const details = readDetails(req, res);
+    if (!details.ok) return;
+    db.prepare('UPDATE photos SET taken_on = ?, caption = ? WHERE id = ?').run(
+      details.taken_on,
+      details.caption,
+      row.id
+    );
+    res.json(publicPhoto(row.id));
+  });
+
+  router.delete('/:id', (req, res) => {
+    const row = findOwnPhoto(req, res);
+    if (!row) return;
+    // Row first: a leftover file is harmless, a row without its file is not.
+    db.prepare('DELETE FROM photos WHERE id = ?').run(row.id);
+    const files = filePaths(row);
+    fs.rmSync(files.image, { force: true });
+    fs.rmSync(files.thumb, { force: true });
+    res.json({ ok: true });
+  });
+
   return router;
 }
 

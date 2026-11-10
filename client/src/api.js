@@ -24,6 +24,14 @@ async function request(path, options = {}) {
   return data;
 }
 
+export function photoUrl(id) {
+  return `${BASE}/photos/${id}/image`;
+}
+
+export function thumbUrl(id) {
+  return `${BASE}/photos/${id}/thumb`;
+}
+
 export const api = {
   login: (username, password) =>
     request('/auth/login', { method: 'POST', body: JSON.stringify({ username, password }) }),
@@ -52,6 +60,11 @@ export const api = {
   deleteListItem: (listId, itemId) =>
     request(`/lists/${listId}/items/${itemId}`, { method: 'DELETE' }),
   clearCheckedItems: (listId) => request(`/lists/${listId}/clear-checked`, { method: 'POST' }),
+  getPhotos: () => request('/photos'),
+  uploadPhoto: (photo) => request('/photos', { method: 'POST', body: JSON.stringify(photo) }),
+  updatePhoto: (id, details) =>
+    request(`/photos/${id}`, { method: 'PUT', body: JSON.stringify(details) }),
+  deletePhoto: (id) => request(`/photos/${id}`, { method: 'DELETE' }),
   getUsers: () => request('/users'),
   getWordleToday: () => request('/wordle/today'),
   submitWordleGuess: (guess) =>

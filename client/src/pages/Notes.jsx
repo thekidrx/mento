@@ -1,11 +1,14 @@
 import { useEffect, useState } from 'react';
 import { api } from '../api';
-import { canDeleteNote } from './notesLogic';
+import { canDeleteNote, formatNoteTime } from './notesLogic';
+import { CuteCat } from '../components/CuteCat';
+import { TrashIcon } from '../components/Icons';
 
 export function NotesPage({ currentUserId }) {
   const [notes, setNotes] = useState([]);
   const [message, setMessage] = useState('');
   const [error, setError] = useState('');
+  const [loaded, setLoaded] = useState(false);
 
   useEffect(() => {
     loadNotes();
@@ -15,6 +18,7 @@ export function NotesPage({ currentUserId }) {
     try {
       const data = await api.getNotes();
       setNotes(data);
+      setLoaded(true);
     } catch (err) {
       setError(err.message);
     }
@@ -44,27 +48,64 @@ export function NotesPage({ currentUserId }) {
 
   return (
     <div className="notes-page">
-      <form onSubmit={handleSubmit}>
+      <div className="page-heading">
+        <h1 className="page-title">Notes</h1>
+        <p className="page-subtitle">Little messages for each other.</p>
+      </div>
+      <form className="note-compose card" onSubmit={handleSubmit}>
+        <label className="sr-only" htmlFor="note-message">Leave a note</label>
         <textarea
+          id="note-message"
+          rows={3}
           value={message}
           onChange={(e) => setMessage(e.target.value)}
-          placeholder="Leave a note..."
+          placeholder="Leave a note…"
           required
         />
-        {error && <p className="error">{error}</p>}
-        <button type="submit">Post</button>
+        {error && <p className="error" role="alert">{error}</p>}
+        <div className="form-actions end">
+          <button type="submit" className="btn btn-primary">Post note</button>
+        </div>
       </form>
-      <ul className="notes-list">
-        {notes.map((note) => (
-          <li key={note.id}>
-            <strong>{note.display_name}</strong>{' '}
-            <span className="note-timestamp">{note.created_at} UTC</span>: {note.message}
-            {canDeleteNote(note, currentUserId) && (
-              <button onClick={() => handleDelete(note.id)}>Delete</button>
-            )}
-          </li>
-        ))}
-      </ul>
+      {!loaded ? null : notes.length === 0 ? (
+        <div className="empty-state card">
+          <CuteCat className="empty-mascot" />
+          <p className="empty-title">No notes yet</p>
+          <p className="empty-text">Be the first to leave something sweet.</p>
+        </div>
+      ) : (
+        <ul className="notes-list">
+          {notes.map((note) => {
+            const mine = canDeleteNote(note, currentUserId);
+            return (
+              <li key={note.id} className={`note card${mine ? ' mine' : ''}`}>
+                <span className="avatar" aria-hidden="true">
+                  {(note.display_name || '?').charAt(0).toUpperCase()}
+                </span>
+                <div className="note-body">
+                  <div className="note-meta">
+                    <strong className="note-author">{note.display_name}</strong>
+                    <time className="note-timestamp" title={`${note.created_at} UTC`}>
+                      {formatNoteTime(note.created_at)}
+                    </time>
+                  </div>
+                  <p className="note-message">{note.message}</p>
+                </div>
+                {mine && (
+                  <button
+                    type="button"
+                    className="icon-btn danger"
+                    aria-label="Delete note"
+                    onClick={() => handleDelete(note.id)}
+                  >
+                    <TrashIcon size={16} />
+                  </button>
+                )}
+              </li>
+            );
+          })}
+        </ul>
+      )}
     </div>
   );
 }

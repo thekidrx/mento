@@ -1,5 +1,7 @@
 import { useEffect, useState } from 'react';
 import { api } from '../api';
+import { Scoreboard, ResultBanner } from '../components/Scoreboard';
+import { BackspaceIcon } from '../components/Icons';
 import { normalizeGuess, isValidShape, buildKeyboardState } from './wordleLogic';
 
 const KEYBOARD_ROWS = [
@@ -104,55 +106,64 @@ export function WordlePage({ currentUserId }) {
   }
 
   return (
-    <div className="wordle-page">
-      {self && opponent && (
-        <div className="wordle-score">
-          {self.display_name} {score[self.id] || 0} – {opponent.display_name} {score[opponent.id] || 0}
-        </div>
-      )}
-      <div className="wordle-grid">
-        {rows.map((row, i) => (
-          <div key={i} className="wordle-row">
-            {row.letters.map((letter, j) => (
-              <div
-                key={j}
-                className={`wordle-tile${row.feedback ? ` feedback-${row.feedback[j]}` : ''}`}
-              >
-                {letter.trim()}
-              </div>
-            ))}
-          </div>
-        ))}
+    <div className="wordle-page game-page">
+      <div className="page-heading">
+        <h1 className="page-title">Wordle</h1>
+        <p className="page-subtitle">One word a day. Fewest guesses wins.</p>
       </div>
-      {error && <p className="error">{error}</p>}
-      {(solved || failed) && !opponentFinished && (
-        <p>Waiting on {opponent ? opponent.display_name : 'your partner'} to finish today's puzzle.</p>
-      )}
-      {todayResult && (
-        <p>
-          {todayResult.winner === 'tie' && "Today's puzzle was a tie."}
-          {todayResult.winner === 'you' && 'You won today!'}
-          {todayResult.winner === 'opponent' &&
-            `${opponent ? opponent.display_name : 'Your partner'} won today.`}
-          {' '}({todayResult.yourGuesses} vs {todayResult.opponentGuesses} guesses). The word was{' '}
-          {todayResult.answer}.
-        </p>
-      )}
-      <div className="wordle-keyboard">
-        {KEYBOARD_ROWS.map((row, i) => (
-          <div key={i} className="wordle-keyboard-row">
-            {row.map((key) => (
-              <button
-                key={key}
-                type="button"
-                onClick={() => handleKey(key)}
-                className={`wordle-key${keyboardState[key] ? ` feedback-${keyboardState[key]}` : ''}`}
-              >
-                {key === 'BACKSPACE' ? '⌫' : key}
-              </button>
-            ))}
-          </div>
-        ))}
+      <div className="game-card card">
+        <Scoreboard self={self} opponent={opponent} score={score} />
+        <div className="wordle-grid">
+          {rows.map((row, i) => (
+            <div key={i} className="wordle-row">
+              {row.letters.map((letter, j) => (
+                <div
+                  key={j}
+                  className={`wordle-tile${row.feedback ? ` feedback-${row.feedback[j]}` : ''}${
+                    !row.feedback && letter.trim() ? ' filled' : ''
+                  }`}
+                >
+                  {letter.trim()}
+                </div>
+              ))}
+            </div>
+          ))}
+        </div>
+        {error && <p className="error" role="alert">{error}</p>}
+        {(solved || failed) && !opponentFinished && (
+          <ResultBanner>
+            Waiting on {opponent ? opponent.display_name : 'your partner'} to finish today's puzzle.
+          </ResultBanner>
+        )}
+        {todayResult && (
+          <ResultBanner tone={todayResult.winner === 'you' ? 'win' : 'info'}>
+            {todayResult.winner === 'tie' && "Today's puzzle was a tie."}
+            {todayResult.winner === 'you' && 'You won today!'}
+            {todayResult.winner === 'opponent' &&
+              `${opponent ? opponent.display_name : 'Your partner'} won today.`}
+            {' '}({todayResult.yourGuesses} vs {todayResult.opponentGuesses} guesses). The word was{' '}
+            <strong className="wordle-answer">{todayResult.answer}</strong>.
+          </ResultBanner>
+        )}
+        <div className="wordle-keyboard">
+          {KEYBOARD_ROWS.map((row, i) => (
+            <div key={i} className="wordle-keyboard-row">
+              {row.map((key) => (
+                <button
+                  key={key}
+                  type="button"
+                  onClick={() => handleKey(key)}
+                  aria-label={key === 'BACKSPACE' ? 'Backspace' : undefined}
+                  className={`wordle-key${key.length > 1 ? ' wide' : ''}${
+                    keyboardState[key] ? ` feedback-${keyboardState[key]}` : ''
+                  }`}
+                >
+                  {key === 'BACKSPACE' ? <BackspaceIcon size={20} /> : key}
+                </button>
+              ))}
+            </div>
+          ))}
+        </div>
       </div>
     </div>
   );

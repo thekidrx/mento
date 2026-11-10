@@ -1,11 +1,23 @@
 import { useEffect, useState } from 'react';
 import { MonthGrid } from '../components/MonthGrid';
+import { toDateKey } from '../components/monthGridLogic';
+import { CuteCat } from '../components/CuteCat';
+import { ChevronLeftIcon, ChevronRightIcon, PencilIcon, TrashIcon } from '../components/Icons';
 import { api } from '../api';
 
 const MONTH_NAMES = [
   'January', 'February', 'March', 'April', 'May', 'June',
   'July', 'August', 'September', 'October', 'November', 'December',
 ];
+
+function formatLongDate(dateKey) {
+  const [y, m, d] = dateKey.split('-').map(Number);
+  return new Date(y, m - 1, d).toLocaleDateString('en-US', {
+    weekday: 'long',
+    month: 'long',
+    day: 'numeric',
+  });
+}
 
 export function CalendarPage() {
   const today = new Date();
@@ -89,45 +101,99 @@ export function CalendarPage() {
     }
   }
 
+  function goToToday() {
+    const now = new Date();
+    setYear(now.getFullYear());
+    setMonth(now.getMonth());
+    handleDayClick(toDateKey(now));
+  }
+
   const isEditing = editingEventId !== null;
+  const dayEvents = events.filter((e) => e.date === selectedDate);
 
   return (
     <div className="calendar-page">
-      <div className="calendar-controls">
-        <button onClick={() => changeMonth(-1)}>&lt;</button>
-        <span>{MONTH_NAMES[month]} {year}</span>
-        <button onClick={() => changeMonth(1)}>&gt;</button>
+      <div className="page-heading calendar-controls">
+        <h1 className="page-title">{MONTH_NAMES[month]} <span className="page-title-year">{year}</span></h1>
+        <div className="calendar-nav">
+          <button type="button" className="btn btn-soft" onClick={goToToday}>Today</button>
+          <button type="button" className="btn btn-soft btn-round" aria-label="Previous month" onClick={() => changeMonth(-1)}>
+            <ChevronLeftIcon size={18} />
+          </button>
+          <button type="button" className="btn btn-soft btn-round" aria-label="Next month" onClick={() => changeMonth(1)}>
+            <ChevronRightIcon size={18} />
+          </button>
+        </div>
       </div>
-      <MonthGrid year={year} month={month} events={events} onDayClick={handleDayClick} />
-      {selectedDate && (
-        <form className="event-form" onSubmit={handleSubmitEvent}>
-          <h2>{isEditing ? 'Edit event' : 'Add event'} on {selectedDate}</h2>
-          <input value={title} onChange={(e) => setTitle(e.target.value)} placeholder="Title" required />
-          <input
-            value={description}
-            onChange={(e) => setDescription(e.target.value)}
-            placeholder="Description"
-          />
-          {error && <p className="error">{error}</p>}
-          <button type="submit">{isEditing ? 'Save' : 'Add'}</button>
-          {isEditing ? (
-            <button type="button" onClick={resetForm}>Cancel edit</button>
+      <div className="calendar-layout">
+        <MonthGrid
+          year={year}
+          month={month}
+          events={events}
+          selectedDate={selectedDate}
+          onDayClick={handleDayClick}
+        />
+        <aside className="day-panel card">
+          {!selectedDate ? (
+            <div className="empty-state">
+              <CuteCat className="empty-mascot" />
+              <p className="empty-title">Pick a day</p>
+              <p className="empty-text">Tap any date to see what's planned or add something new.</p>
+              {error && <p className="error" role="alert">{error}</p>}
+            </div>
           ) : (
-            <button type="button" onClick={() => { resetForm(); setSelectedDate(null); }}>Cancel</button>
+            <>
+              <p className="day-panel-eyebrow">{isEditing ? 'Editing plan' : 'Plans for'}</p>
+              <h2 className="day-panel-title">{formatLongDate(selectedDate)}</h2>
+              {dayEvents.length > 0 ? (
+                <ul className="event-list">
+                  {dayEvents.map((event) => (
+                    <li key={event.id} className={event.id === editingEventId ? 'editing' : undefined}>
+                      <div className="event-text">
+                        <span className="event-title">{event.title}</span>
+                        {event.description && <span className="event-description">{event.description}</span>}
+                      </div>
+                      <div className="event-actions">
+                        <button type="button" className="icon-btn" aria-label={`Edit ${event.title}`} onClick={() => startEditing(event)}>
+                          <PencilIcon size={16} />
+                        </button>
+                        <button type="button" className="icon-btn danger" aria-label={`Delete ${event.title}`} onClick={() => handleDeleteEvent(event.id)}>
+                          <TrashIcon size={16} />
+                        </button>
+                      </div>
+                    </li>
+                  ))}
+                </ul>
+              ) : (
+                <p className="muted">Nothing planned yet.</p>
+              )}
+              <form className="event-form" onSubmit={handleSubmitEvent}>
+                <label className="field">
+                  <span className="field-label">{isEditing ? 'Title' : 'Add a plan'}</span>
+                  <input value={title} onChange={(e) => setTitle(e.target.value)} placeholder="Dinner, movie night…" required />
+                </label>
+                <label className="field">
+                  <span className="field-label">Details <span className="field-optional">optional</span></span>
+                  <input
+                    value={description}
+                    onChange={(e) => setDescription(e.target.value)}
+                    placeholder="Time, place, anything to remember"
+                  />
+                </label>
+                {error && <p className="error" role="alert">{error}</p>}
+                <div className="form-actions">
+                  <button type="submit" className="btn btn-primary">{isEditing ? 'Save' : 'Add'}</button>
+                  {isEditing ? (
+                    <button type="button" className="btn btn-ghost" onClick={resetForm}>Cancel edit</button>
+                  ) : (
+                    <button type="button" className="btn btn-ghost" onClick={() => { resetForm(); setSelectedDate(null); }}>Close</button>
+                  )}
+                </div>
+              </form>
+            </>
           )}
-        </form>
-      )}
-      <ul className="event-list">
-        {events
-          .filter((e) => e.date === selectedDate)
-          .map((event) => (
-            <li key={event.id}>
-              {event.title}
-              <button onClick={() => startEditing(event)}>Edit</button>
-              <button onClick={() => handleDeleteEvent(event.id)}>Delete</button>
-            </li>
-          ))}
-      </ul>
+        </aside>
+      </div>
     </div>
   );
 }

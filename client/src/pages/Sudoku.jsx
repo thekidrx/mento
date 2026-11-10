@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { api } from '../api';
+import { Scoreboard, ResultBanner } from '../components/Scoreboard';
 import {
   parseServerTimestamp,
   formatElapsed,
@@ -124,58 +125,64 @@ export function SudokuPage({ currentUserId }) {
   }
 
   return (
-    <div className="sudoku-page">
-      {self && opponent && (
-        <div className="sudoku-score">
-          {self.display_name} {score[self.id] || 0} – {opponent.display_name} {score[opponent.id] || 0}
-        </div>
-      )}
-      {startedAt && <div className="sudoku-timer">{formatElapsed(elapsedSeconds)}</div>}
-      <div className="sudoku-grid">
-        {cells.map((value, i) => {
-          const col = i % 9;
-          const row = Math.floor(i / 9);
-          const classes = ['sudoku-cell'];
-          if (puzzle[i] !== '0') classes.push('given');
-          if (i === selectedIndex) classes.push('selected');
-          if (i === wrongFlashIndex) classes.push('wrong-flash');
-          if (col === 2 || col === 5) classes.push('border-right-thick');
-          if (row === 2 || row === 5) classes.push('border-bottom-thick');
-          return (
-            <div
-              key={i}
-              className={classes.join(' ')}
-              onClick={() => {
-                if (puzzle[i] === '0' && !finishedAt) setSelectedIndex(i);
-              }}
-            >
-              {value !== '0' ? value : ''}
-            </div>
-          );
-        })}
+    <div className="sudoku-page game-page">
+      <div className="page-heading">
+        <h1 className="page-title">Sudoku</h1>
+        <p className="page-subtitle">Same puzzle for both of us. Fastest time wins.</p>
       </div>
-      {error && <p className="error">{error}</p>}
-      {!finishedAt && (
-        <div className="sudoku-numpad">
-          {[1, 2, 3, 4, 5, 6, 7, 8, 9].map((n) => (
-            <button key={n} type="button" onClick={() => handleDigit(n)}>
-              {n}
-            </button>
-          ))}
+      <div className="game-card card">
+        <Scoreboard self={self} opponent={opponent} score={score} />
+        <div className="sudoku-timer" aria-label="Elapsed time">
+          {startedAt ? formatElapsed(elapsedSeconds) : 'Timer starts on your first entry'}
         </div>
-      )}
-      {finishedAt && !opponentFinished && (
-        <p>Waiting on {opponent ? opponent.display_name : 'your partner'} to finish today's puzzle.</p>
-      )}
-      {todayResult && (
-        <p>
-          {todayResult.winner === 'tie' && "Today's puzzle was a tie."}
-          {todayResult.winner === 'you' && 'You won today!'}
-          {todayResult.winner === 'opponent' &&
-            `${opponent ? opponent.display_name : 'Your partner'} won today.`}
-          {' '}({formatElapsed(todayResult.yourSeconds)} vs {formatElapsed(todayResult.opponentSeconds)})
-        </p>
-      )}
+        <div className="sudoku-grid">
+          {cells.map((value, i) => {
+            const col = i % 9;
+            const row = Math.floor(i / 9);
+            const classes = ['sudoku-cell'];
+            if (puzzle[i] !== '0') classes.push('given');
+            if (i === selectedIndex) classes.push('selected');
+            if (i === wrongFlashIndex) classes.push('wrong-flash');
+            if (col === 2 || col === 5) classes.push('border-right-thick');
+            if (row === 2 || row === 5) classes.push('border-bottom-thick');
+            return (
+              <div
+                key={i}
+                className={classes.join(' ')}
+                onClick={() => {
+                  if (puzzle[i] === '0' && !finishedAt) setSelectedIndex(i);
+                }}
+              >
+                {value !== '0' ? value : ''}
+              </div>
+            );
+          })}
+        </div>
+        {error && <p className="error" role="alert">{error}</p>}
+        {!finishedAt && (
+          <div className="sudoku-numpad">
+            {[1, 2, 3, 4, 5, 6, 7, 8, 9].map((n) => (
+              <button key={n} type="button" onClick={() => handleDigit(n)}>
+                {n}
+              </button>
+            ))}
+          </div>
+        )}
+        {finishedAt && !opponentFinished && (
+          <ResultBanner>
+            Waiting on {opponent ? opponent.display_name : 'your partner'} to finish today's puzzle.
+          </ResultBanner>
+        )}
+        {todayResult && (
+          <ResultBanner tone={todayResult.winner === 'you' ? 'win' : 'info'}>
+            {todayResult.winner === 'tie' && "Today's puzzle was a tie."}
+            {todayResult.winner === 'you' && 'You won today!'}
+            {todayResult.winner === 'opponent' &&
+              `${opponent ? opponent.display_name : 'Your partner'} won today.`}
+            {' '}({formatElapsed(todayResult.yourSeconds)} vs {formatElapsed(todayResult.opponentSeconds)})
+          </ResultBanner>
+        )}
+      </div>
     </div>
   );
 }

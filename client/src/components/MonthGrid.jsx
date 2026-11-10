@@ -1,8 +1,9 @@
 import { getMonthGridDays, toDateKey } from './monthGridLogic';
 
 const WEEKDAYS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+const MAX_VISIBLE_EVENTS = 2;
 
-export function MonthGrid({ year, month, events, onDayClick }) {
+export function MonthGrid({ year, month, events, selectedDate, onDayClick }) {
   const days = getMonthGridDays(year, month);
   const eventsByDate = {};
   for (const event of events) {
@@ -24,13 +25,22 @@ export function MonthGrid({ year, month, events, onDayClick }) {
           const key = toDateKey(date);
           const dayEvents = eventsByDate[key] || [];
           const isToday = key === todayKey;
+          const isSelected = key === selectedDate;
+          const hidden = dayEvents.length - MAX_VISIBLE_EVENTS;
           return (
-            <div key={i} className="month-grid-cell" onClick={() => onDayClick(key)}>
-              <div className={`month-grid-date${isToday ? ' today' : ''}`}>{date.getDate()}</div>
-              {dayEvents.map((event) => (
-                <div key={event.id} className="month-grid-event">{event.title}</div>
+            <button
+              key={i}
+              type="button"
+              className={`month-grid-cell${isSelected ? ' selected' : ''}`}
+              aria-pressed={isSelected}
+              onClick={() => onDayClick(key)}
+            >
+              <span className={`month-grid-date${isToday ? ' today' : ''}`}>{date.getDate()}</span>
+              {dayEvents.slice(0, MAX_VISIBLE_EVENTS).map((event) => (
+                <span key={event.id} className="month-grid-event">{event.title}</span>
               ))}
-            </div>
+              {hidden > 0 && <span className="month-grid-more">+{hidden} more</span>}
+            </button>
           );
         })}
       </div>

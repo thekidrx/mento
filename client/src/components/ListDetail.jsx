@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { api } from '../api';
-import { splitItems } from '../pages/listsLogic';
+import { missingKind, splitItems } from '../pages/listsLogic';
 import { ArrowLeftIcon, CheckIcon, PencilIcon, TrashIcon } from './Icons';
 import { useRefreshOnVisible } from './useRefreshOnVisible';
 
@@ -22,17 +22,17 @@ export function ListDetail({ listId, onBack }) {
   // A ref, not state: two clicks in the same tick both see the old state.
   const adding = useRef(false);
 
-  // The other person can delete the list while it is open here.
-  function isListGone(err) {
-    return err.status === 404 && err.message === 'List not found';
-  }
+  const deleting = useRef(false);
 
-  async function loadList() {
+  // keepError: set when reloading right after a failed action, so the
+  // reload does not wipe the message explaining what went wrong.
+  async function loadList({ keepError = false } = {}) {
     try {
       setList(await api.getList(listId));
+      if (!keepError) setError('');
       return true;
     } catch (err) {
-      if (isListGone(err)) {
+      if (missingKind(err) === 'list') {
         onBack('That list was deleted.');
       } else {
         setError(err.message);
@@ -45,7 +45,7 @@ export function ListDetail({ listId, onBack }) {
     loadList();
   }, [listId]);
 
-  useRefreshOnVisible(loadList);
+  useRefreshOnVisible(() => loadList());
 
   // Runs one change, then reloads so the page always matches the server.
   async function run(action) {
@@ -55,12 +55,19 @@ export function ListDetail({ listId, onBack }) {
       await loadList();
       return true;
     } catch (err) {
-      if (isListGone(err)) {
+      const missing = missingKind(err);
+      if (missing === 'list') {
         onBack('That list was deleted.');
         return false;
       }
+      if (missing === 'item') {
+        // Already removed (a second tap, or the other person got there
+        // first). Reloading shows the truth; there is nothing to report.
+        await loadList();
+        return false;
+      }
       setError(err.message);
-      await loadList();
+      await loadList({ keepError: true });
       return false;
     }
   }
@@ -86,14 +93,18 @@ export function ListDetail({ listId, onBack }) {
   }
 
   async function handleDeleteList() {
+    if (deleting.current) return;
+    deleting.current = true;
     setError('');
     try {
       await api.deleteList(listId);
       onBack();
     } catch (err) {
-      if (isListGone(err)) {
-        onBack('That list was deleted.');
+      if (missingKind(err) === 'list') {
+        // Gone already, which is what was asked for.
+        onBack();
       } else {
+        deleting.current = false;
         setError(err.message);
       }
     }

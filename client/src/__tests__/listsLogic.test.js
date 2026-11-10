@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { progressLabel, splitItems } from '../pages/listsLogic';
+import { progressLabel, splitItems, missingKind } from '../pages/listsLogic';
 
 describe('progressLabel', () => {
   it.each([
@@ -27,5 +27,31 @@ describe('splitItems', () => {
 
   it('returns empty arrays for an empty list', () => {
     expect(splitItems([])).toEqual({ open: [], done: [] });
+  });
+});
+
+describe('missingKind', () => {
+  function apiError(status, message) {
+    const err = new Error(message);
+    err.status = status;
+    return err;
+  }
+
+  it('recognises a list that no longer exists', () => {
+    expect(missingKind(apiError(404, 'List not found'))).toBe('list');
+  });
+
+  it('recognises an item that no longer exists', () => {
+    expect(missingKind(apiError(404, 'Item not found'))).toBe('item');
+  });
+
+  it.each([
+    [400, 'Item text is required'],
+    [500, 'Something went wrong'],
+    [404, 'Not found'],
+    [undefined, 'Failed to fetch'],
+    [400, 'List not found'],
+  ])('returns null for status %s "%s"', (status, message) => {
+    expect(missingKind(apiError(status, message))).toBeNull();
   });
 });

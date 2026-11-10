@@ -52,3 +52,20 @@ CREATE TABLE IF NOT EXISTS sudoku_results (
   finished_at TEXT,
   UNIQUE(day_id, user_id)
 );
+
+CREATE TABLE IF NOT EXISTS lists (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  name TEXT NOT NULL,
+  created_by INTEGER NOT NULL REFERENCES users(id),
+  created_at TEXT NOT NULL DEFAULT (datetime('now'))
+);
+
+CREATE TABLE IF NOT EXISTS list_items (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  list_id INTEGER NOT NULL REFERENCES lists(id),
+  text TEXT NOT NULL,
+  created_by INTEGER NOT NULL REFERENCES users(id),
+  created_at TEXT NOT NULL DEFAULT (datetime('now')),
+  checked_by INTEGER REFERENCES users(id),
+  checked_at TEXT
+);

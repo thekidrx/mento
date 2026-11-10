@@ -5,6 +5,7 @@ const SqliteStore = require('better-sqlite3-session-store')(session);
 const { createAuthRouter, requireAuth } = require('./auth');
 const { createEventsRouter } = require('./routes/events');
 const { createNotesRouter } = require('./routes/notes');
+const { createListsRouter } = require('./routes/lists');
 const { createWordleRouter } = require('./routes/wordle');
 const { createUsersRouter } = require('./routes/users');
 const { createSudokuRouter } = require('./routes/sudoku');
@@ -28,6 +29,7 @@ function createApp(db, options = {}) {
   app.use('/api/auth', createAuthRouter(db));
   app.use('/api/events', requireAuth, createEventsRouter(db));
   app.use('/api/notes', requireAuth, createNotesRouter(db));
+  app.use('/api/lists', requireAuth, createListsRouter(db));
   app.use('/api/wordle', requireAuth, createWordleRouter(db));
   app.use('/api/users', requireAuth, createUsersRouter(db));
   app.use('/api/sudoku', requireAuth, createSudokuRouter(db));

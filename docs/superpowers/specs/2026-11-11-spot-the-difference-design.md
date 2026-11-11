@@ -210,6 +210,8 @@ router. The router takes an optional clock (`createSpotRouter(db,
   timeLimitMs: 45000, penaltyMs: 3000, total: 7,
   remainingMs,            // 45000 before start, 0 when finished
   found: [indexes],       // this player's hits, in the order found
+  foundDifferences,       // [{ index, x, y, r }] for those hits, so
+                          // their rings survive a reload
   wrongTaps,
   theme, sceneA, sceneB,  // only when playing or finished
   differences,            // [{ index, x, y, r }], only when finished
@@ -222,7 +224,8 @@ router. The router takes an optional clock (`createSpotRouter(db,
 ```
 
 - While playing, the state does not include `differences`: the browser
-  learns where a difference is only by hitting it. A hit's response
+  learns where a difference is only by hitting it. `foundDifferences`
+  holds only the ones this player has already hit. A hit's response
   gives that one difference's `{ index, x, y, r }` so it can be
   ringed.
 - `POST /start` on a round already started or finished changes nothing

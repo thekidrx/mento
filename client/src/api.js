@@ -19,6 +19,8 @@ async function request(path, options = {}) {
   if (!res.ok) {
     const err = new Error(data.error || 'Request failed');
     err.status = res.status;
+    // The parsed body, for errors that carry more than a message.
+    err.data = data;
     throw err;
   }
   return data;
@@ -74,4 +76,8 @@ export const api = {
   startSudoku: () => request('/sudoku/start', { method: 'POST' }),
   finishSudoku: () => request('/sudoku/finish', { method: 'POST' }),
   getSudokuScore: () => request('/sudoku/score'),
+  getSpotToday: () => request('/spot/today'),
+  startSpot: () => request('/spot/start', { method: 'POST' }),
+  tapSpot: (x, y) => request('/spot/tap', { method: 'POST', body: JSON.stringify({ x, y }) }),
+  getSpotScore: () => request('/spot/score'),
 };

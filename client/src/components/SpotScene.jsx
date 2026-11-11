@@ -4,7 +4,9 @@ import { SpotBackground, SpotObject } from './spotObjects';
 // One of the two pictures. `marks` are the rings to draw; `flashes` are the
 // short-lived "−3s" notes for wrong taps made in this picture.
 export function SpotScene({ label, theme, sceneObjects, marks, flashes = [], onTap, disabled }) {
-  function handlePointerDown(e) {
+  // A click, not a pointer-down: a finger that starts a scroll or a pinch on
+  // the picture presses down too, and must not be judged as a wrong tap.
+  function handleClick(e) {
     if (disabled || !onTap) return;
     // Measured on every tap: the picture moves and resizes when the phone
     // is rotated or the window changes.
@@ -20,7 +22,7 @@ export function SpotScene({ label, theme, sceneObjects, marks, flashes = [], onT
         viewBox="0 0 400 300"
         role="img"
         aria-label={`Picture ${label}`}
-        onPointerDown={handlePointerDown}
+        onClick={handleClick}
       >
         <defs>
           <clipPath id="spot-ball-clip">

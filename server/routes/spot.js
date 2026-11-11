@@ -221,23 +221,29 @@ function createSpotRouter(db, { now = Date.now } = {}) {
     const today = dateString(nowMs);
     const days = db.prepare('SELECT * FROM spot_days ORDER BY date ASC').all();
 
-    // A finished round's result, or null for no round or one still going.
-    function finishedResult(dayId, userId, isToday) {
+    // { result } for a finished round, { result: null } for no round, and
+    // { running: true } for one still being played.
+    function roundSummary(dayId, userId) {
       const result = getResult(dayId, userId);
-      if (!result) return null;
+      if (!result) return { result: null };
       const finds = getFinds(result.id);
-      if (isToday && !isFinished(roundOf(result, finds), nowMs)) return null;
-      return resultOf(result, finds);
+      if (!isFinished(roundOf(result, finds), nowMs)) return { running: true };
+      return { result: resultOf(result, finds) };
     }
 
     const resolvedDays = [];
     for (const day of days) {
       const isToday = day.date === today;
-      const a = finishedResult(day.id, userA.id, isToday);
-      const b = finishedResult(day.id, userB.id, isToday);
+      const a = roundSummary(day.id, userA.id);
+      const b = roundSummary(day.id, userB.id);
+      // A round still running (even one from yesterday that crossed
+      // midnight) must not be scored on its partial result.
+      if (a.running || b.running) continue;
       // Today only counts once both are done; on a past day, not playing loses.
-      if (isToday && (!a || !b)) continue;
-      resolvedDays.push({ counts: { [userA.id]: rankValue(a), [userB.id]: rankValue(b) } });
+      if (isToday && (!a.result || !b.result)) continue;
+      resolvedDays.push({
+        counts: { [userA.id]: rankValue(a.result), [userB.id]: rankValue(b.result) },
+      });
     }
     return res.json(computeScoreTally(resolvedDays, userA.id, userB.id));
   });

@@ -5,14 +5,13 @@ import { SpotScene } from '../components/SpotScene';
 import { useRefreshOnVisible } from '../components/useRefreshOnVisible';
 import { formatCountdown, resultLine } from './spotLogic';
 
+// Same rounding as the clock: tenths of a second, rounded down.
+const seconds = formatCountdown;
+
 const OFFLINE_MESSAGE = "Couldn't reach the server. The clock is still running.";
 const DOUBLE_TAP_MS = 250;
 const FLASH_MS = 900;
 const LOW_TIME_MS = 10000;
-
-function seconds(ms) {
-  return (Math.floor(ms / 100) / 10).toFixed(1);
-}
 
 export function SpotPage({ currentUserId }) {
   const [state, setState] = useState(null);
@@ -111,7 +110,14 @@ export function SpotPage({ currentUserId }) {
     try {
       applyState(await api.startSpot(), requestId);
     } catch {
-      setError("Couldn't start the round. Nothing has been counted; try again.");
+      // The request may have reached the server even though its answer did
+      // not come back, in which case the round is already running.
+      const loaded = await loadState();
+      if (!loaded) {
+        setError(
+          "Couldn't reach the server. If the round started, the clock is running. Try again now."
+        );
+      }
     } finally {
       starting.current = false;
     }
@@ -146,6 +152,10 @@ export function SpotPage({ currentUserId }) {
       if (err.status === 409 && err.data && err.data.state) {
         applyState(err.data.state, requestId);
         setError('');
+      } else if (err.status === 409) {
+        // The server no longer has a running round for this tap (it ended
+        // just after midnight, say). Show whatever it has now.
+        loadState();
       } else {
         setError(OFFLINE_MESSAGE);
         // Lets the zero-clock check ask the server again.

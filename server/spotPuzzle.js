@@ -26,12 +26,24 @@ const PALETTE = {
 const FAMILIES = Object.keys(PALETTE);
 const THEMES = ['shelf', 'garden', 'picnic'];
 
-function defineType(theme, { turn = false, count = false, detail = false } = {}) {
+// smallSecondColor: the second colour is only drawn on tiny parts (dots,
+// buttons, veins), where a one-shade change cannot really be seen, so only
+// the first colour may change.
+function defineType(
+  theme,
+  { turn = false, count = false, detail = false, smallSecondColor = false } = {}
+) {
   const changes = ['color', 'move', 'size'];
   if (turn) changes.push('turn');
   if (count) changes.push('count');
   if (detail) changes.push('detail');
-  return { theme, changes, hasCount: count, hasDetail: detail };
+  return {
+    theme,
+    changes,
+    hasCount: count,
+    hasDetail: detail,
+    colorSlots: smallSecondColor ? [0] : [0, 1],
+  };
 }
 
 // Which changes can actually be seen on each kind of object. A ball, for
@@ -40,7 +52,7 @@ const OBJECT_TYPES = {
   ball: defineType('shelf', { count: true }),
   block: defineType('shelf', { turn: true }),
   teddy: defineType('shelf', { detail: true }),
-  robot: defineType('shelf', { count: true, detail: true }),
+  robot: defineType('shelf', { count: true, detail: true, smallSecondColor: true }),
   book: defineType('shelf', { turn: true, count: true }),
   car: defineType('shelf', { detail: true }),
   rocket: defineType('shelf', { turn: true, count: true }),
@@ -48,20 +60,21 @@ const OBJECT_TYPES = {
 
   flower: defineType('garden', { count: true, detail: true }),
   tulip: defineType('garden', { turn: true }),
-  mushroom: defineType('garden', { count: true }),
+  mushroom: defineType('garden', { count: true, smallSecondColor: true }),
   butterfly: defineType('garden', { turn: true, detail: true }),
   snail: defineType('garden', { detail: true }),
-  ladybird: defineType('garden', { turn: true, count: true }),
-  leaf: defineType('garden', { turn: true }),
+  ladybird: defineType('garden', { turn: true, count: true, smallSecondColor: true }),
+  leaf: defineType('garden', { turn: true, smallSecondColor: true }),
   carrot: defineType('garden', { turn: true, count: true }),
 
   cup: defineType('picnic', { detail: true }),
   teapot: defineType('picnic', { detail: true }),
   cupcake: defineType('picnic', { count: true, detail: true }),
-  apple: defineType('picnic', { turn: true, detail: true }),
+  apple: defineType('picnic', { turn: true, detail: true, smallSecondColor: true }),
   sandwich: defineType('picnic', { turn: true }),
   cheese: defineType('picnic', { turn: true, count: true }),
-  cookie: defineType('picnic', { turn: true, count: true }),
+  // Round, so turning it only shifts the chips by a hair.
+  cookie: defineType('picnic', { count: true, smallSecondColor: true }),
   bottle: defineType('picnic', { turn: true, detail: true }),
 };
 
@@ -147,7 +160,7 @@ function applyChange(object, kind, { int, pick, shuffle }) {
   const changed = { ...object, colors: object.colors.map((c) => ({ ...c })) };
 
   if (kind === 'color') {
-    const slot = changed.colors[int(0, 1)];
+    const slot = changed.colors[pick(OBJECT_TYPES[object.type].colorSlots)];
     slot.shade = slot.shade === 1 ? pick([0, 2]) : 1;
     return changed;
   }

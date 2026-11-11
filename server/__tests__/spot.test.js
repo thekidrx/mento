@@ -373,6 +373,29 @@ describe('spot the difference results', () => {
     expect(await score()).toEqual({ [ryanId]: 1, [samId]: 2 });
   });
 
+  it('leaves a day out of the score while a round from it is still running', async () => {
+    const ryanId = db.prepare("SELECT id FROM users WHERE username = 'ryan'").get().id;
+    const samId = db.prepare("SELECT id FROM users WHERE username = 'sam'").get().id;
+    const score = async () => (await sam.get('/api/spot/score')).body;
+
+    nowMs = new Date(2026, 10, 11, 20, 0, 0).getTime();
+    await playRound(sam, 1);
+
+    // Ryan starts just before midnight and is still playing after it.
+    nowMs = new Date(2026, 10, 11, 23, 59, 50).getTime();
+    await ryan.post('/api/spot/start');
+    nowMs = new Date(2026, 10, 12, 0, 0, 5).getTime();
+    expect(await score()).toEqual({ [ryanId]: 0, [samId]: 0 });
+
+    await tapOn(ryan, 0);
+    nowMs += 1000;
+    await tapOn(ryan, 1);
+    expect(await score()).toEqual({ [ryanId]: 0, [samId]: 0 });
+
+    nowMs = new Date(2026, 10, 12, 0, 1, 0).getTime();
+    expect(await score()).toEqual({ [ryanId]: 1, [samId]: 0 });
+  });
+
   it('returns an empty score when there are not two users', async () => {
     db.prepare("DELETE FROM users WHERE username = 'sam'").run();
     expect((await ryan.get('/api/spot/score')).body).toEqual({});

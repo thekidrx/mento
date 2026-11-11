@@ -60,6 +60,8 @@ describe.each(SEEDS)('seed %i', (seed) => {
         expect(diffs).toHaveLength(1);
         const i = diffs[0];
         expect(after.colors[i].family).toBe(before.colors[i].family);
+        // Only a colour the drawing shows over a large enough area may change.
+        expect(OBJECT_TYPES[before.type].colorSlots).toContain(i);
         expect(Math.abs(after.colors[i].shade - before.colors[i].shade)).toBe(1);
       } else if (d.kind === 'move') {
         same(others.filter((k) => k !== 'x' && k !== 'y'));
@@ -120,5 +122,18 @@ it('gives every type the three universal changes and a consistent table', () => 
     expect(t.changes).toEqual(expect.arrayContaining(['color', 'move', 'size']));
     expect(t.changes.includes('count')).toBe(t.hasCount);
     expect(t.changes.includes('detail')).toBe(t.hasDetail);
+  }
+});
+
+it('never changes a colour that is only drawn on tiny details', () => {
+  for (const type of ['robot', 'mushroom', 'ladybird', 'cookie', 'leaf', 'apple']) {
+    expect(OBJECT_TYPES[type].colorSlots).toEqual([0]);
+  }
+  expect(OBJECT_TYPES.teddy.colorSlots).toEqual([0, 1]);
+});
+
+it('never turns a round object', () => {
+  for (const type of ['ball', 'cookie', 'drum', 'mushroom']) {
+    expect(OBJECT_TYPES[type].changes).not.toContain('turn');
   }
 });

@@ -151,3 +151,14 @@ export function CloseIcon(props) {
     </Icon>
   );
 }
+
+export function GamesIcon(props) {
+  return (
+    <Icon {...props}>
+      <rect x="2.5" y="7" width="19" height="11" rx="5.5" />
+      <path d="M7.5 10.5v4M5.5 12.5h4" />
+      <circle cx="15.5" cy="11" r="0.6" />
+      <circle cx="18" cy="13.5" r="0.6" />
+    </Icon>
+  );
+}

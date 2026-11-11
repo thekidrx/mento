@@ -78,3 +78,26 @@ CREATE TABLE IF NOT EXISTS photos (
   created_by INTEGER NOT NULL REFERENCES users(id),
   created_at TEXT NOT NULL DEFAULT (datetime('now'))
 );
+
+CREATE TABLE IF NOT EXISTS spot_days (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  date TEXT UNIQUE NOT NULL,
+  seed INTEGER NOT NULL
+);
+
+CREATE TABLE IF NOT EXISTS spot_results (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  day_id INTEGER NOT NULL REFERENCES spot_days(id),
+  user_id INTEGER NOT NULL REFERENCES users(id),
+  started_at_ms INTEGER NOT NULL,
+  wrong_taps INTEGER NOT NULL DEFAULT 0,
+  UNIQUE(day_id, user_id)
+);
+
+CREATE TABLE IF NOT EXISTS spot_finds (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  result_id INTEGER NOT NULL REFERENCES spot_results(id),
+  difference_index INTEGER NOT NULL,
+  found_at_ms INTEGER NOT NULL,
+  UNIQUE(result_id, difference_index)
+);
